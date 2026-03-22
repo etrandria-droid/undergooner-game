@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="style.css">
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="lobby.js" defer></script>
+</head>
+<body>
+<div class="page-transition" id="pageTransition"></div>
+<div class="card">
+
+  <div class="back" onclick="location.href='index.html'">
+    <span class="arrow"></span>
+  </div>
+
+  <div id="settingsBtn" style="display:none;">⚙️</div>
+
+  <div class="lobby-info">
+    <div class="info-row">
+      <span class="label">Salon</span>
+      <span id="lobbyName" class="value"></span>
+    </div>
+    <div class="info-row">
+      <span class="label">Code</span>
+      <div class="code-container">
+        <span id="roomCode" class="value"></span>
+        <button id="copyBtn" class="copy-btn">📂</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="playersZone" class="players-zone"></div>
+
+  <p id="minPlayersMsg" style="
+    color: rgba(255,255,255,0.35);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-top: -8px;
+    margin-bottom: 4px;
+  ">⚠️ Il faut minimum 3 joueurs pour lancer</p>
+
+  <button id="startBtn" class="btn big-action disabled-btn">
+    Lancer la partie
+  </button>
+
+  <div id="settingsPanel" style="display:none;">
+    <div class="settings-box">
+
+      <button id="closeSettings" style="
+        position:absolute;top:12px;right:12px;
+        background:rgba(255,255,255,0.08);
+        border:1px solid rgba(255,255,255,0.12);
+        border-radius:8px;color:white;font-size:16px;
+        cursor:pointer;width:28px;height:28px;
+        display:flex;align-items:center;justify-content:center;
+      ">✕</button>
+
+      <h2>⚙️ Paramètres</h2>
+
+      <div class="setting-row">
+        <span>Joueurs max</span>
+        <select id="maxPlayers">
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8" selected>8</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <span>Timer</span>
+        <select id="timer">
+          <option value="20">20s</option>
+          <option value="30" selected>30s</option>
+          <option value="40">40s</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <span>Rounds</span>
+        <select id="totalRounds">
+          <option value="5">5</option>
+          <option value="10" selected>10</option>
+          <option value="15">15</option>
+          <option value="20">20</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <span>Mots / round</span>
+        <select id="wordsPerRound">
+          <option value="2">2</option>
+          <option value="3" selected>3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+        </select>
+      </div>
+
+      <div class="setting-row" id="mrWhiteRow">
+        <span>Mr. White</span>
+        <input type="checkbox" id="mrWhite">
+      </div>
+
+      <div class="setting-row" id="mrBlackRow">
+        <span>Mr. Black</span>
+        <input type="checkbox" id="mrBlack">
+      </div>
+
+      <p id="mrMinMsg" style="
+        color: rgba(255,255,255,0.3);
+        font-size: 11px;
+        font-weight: 600;
+        text-align: center;
+        margin-top: 6px;
+        display: none;
+      ">⚠️ Nécessite 6 joueurs minimum</p>
+
+      <button id="saveSettings" class="btn blue" style="margin-top:16px;width:auto;padding:12px 30px;">
+        Sauvegarder
+      </button>
+
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

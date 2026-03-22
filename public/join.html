@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="style.css">
+<script src="/socket.io/socket.io.js"></script>
+<script src="join.js" defer></script>
+</head>
+<body>
+<div class="page-transition" id="pageTransition"></div>
+<div class="card">
+
+  <div class="back" onclick="location.href='index.html'">
+    <span class="arrow"></span>
+  </div>
+
+  <h2>Rejoindre une partie</h2>
+
+  <input id="codeInput" placeholder="Code">
+  <input id="nameInput" placeholder="Pseudo" maxlength="9">
+
+  <p class="emoji-title">Sélectionne ton Gooner</p>
+
+  <div class="emoji-selector">
+    <button id="prev">◀</button>
+    <span id="emoji">👽</span>
+    <button id="next">▶</button>
+  </div>
+
+<button id="joinBtn" class="btn blue action-btn" style="font-size:19px; padding:18px 50px; margin-top:16px; width:auto;">
+  Rejoindre
+</button>
+  </button>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="style.css">
+<script src="/socket.io/socket.io.js"></script>
+<script src="create.js" defer></script>
+</head>
+<body>
+<div class="page-transition" id="pageTransition"></div>
+<div class="card">
+
+  <div class="back" onclick="location.href='index.html'">
+    <span class="arrow"></span>
+  </div>
+
+  <h2>Créer une partie</h2>
+
+  <input id="name" placeholder="Pseudo">
+  <input id="roomName" placeholder="Nom du salon">
+
+  <p class="emoji-title">Sélectionne ton Gooner</p>
+
+  <div class="emoji-selector">
+    <button id="prev">◀</button>
+    <span id="emoji">👽</span>
+    <button id="next">▶</button>
+  </div>
+
+<button id="createBtn" class="btn red action-btn" style="font-size:19px; padding:18px 50px; margin-top:16px; width:auto;">
+  Créer
+</button>
+
+</div>
+</body>
+</html>
