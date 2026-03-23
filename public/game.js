@@ -23,7 +23,7 @@ socket.on("connect", () => {
   socket.emit("rejoinGame", { playerName: name, code: roomCode });
 });
 
-// 🔢 1. Décompte
+// 🔢 Décompte
 const steps = ["3", "2", "1", "🔍"];
 let i = 0;
 const countdownScreen = document.getElementById("countdownScreen");
@@ -52,10 +52,8 @@ const interval = setInterval(() => {
 }, 800);
 
 
-// 🔥 startCountdown — nouveau round
 socket.on("startCountdown", (data) => {
   isHost = data.players[0]?.name === name;
-
   word = data.word;
   localStorage.setItem("word", data.word);
   localStorage.setItem("wordsPerRound", data.wordsPerRound);
@@ -72,17 +70,15 @@ socket.on("startCountdown", (data) => {
 });
 
 
-// 🧩 2. Tableau
 function buildTable(playersList, wordsCount) {
   const table = document.getElementById("gameTable");
   const rowLabels = document.getElementById("rowLabels");
   table.innerHTML = "";
   rowLabels.innerHTML = "";
 
-  // 🔥 spacer pour aligner avec le header des joueurs
   const spacer = document.createElement("div");
-spacer.style.height = "0px";
-spacer.style.minHeight = "0px";
+  spacer.style.height = "130px";
+  spacer.style.minHeight = "130px";
   spacer.style.flexShrink = "0";
   rowLabels.appendChild(spacer);
 
@@ -97,7 +93,6 @@ spacer.style.minHeight = "0px";
     const col = document.createElement("div");
     col.className = "player-col";
     col.id = "col-" + p.name;
-    if (p.name === name) col.classList.add("me");
 
     let cellsHtml = "";
     for (let w = 0; w < wordsCount; w++) {
@@ -118,7 +113,6 @@ spacer.style.minHeight = "0px";
 }
 
 
-// 🔄 3. Nouveau tour
 socket.on("newTurn", ({ playerName, wordIndex, wordsPerRound, timer }) => {
   wordsPerRoundConfig = wordsPerRound;
   document.getElementById("inputZone").style.display = "flex";
@@ -151,12 +145,12 @@ socket.on("newTurn", ({ playerName, wordIndex, wordsPerRound, timer }) => {
 });
 
 
-// 🔥 4. Mot joué
 socket.on("wordPlayed", ({ playerName, word, wordIndex }) => {
   const cell = document.getElementById("cell-" + playerName + "-" + wordIndex);
   if (cell) {
     cell.className = "word-cell filled";
     cell.innerText = word === "..." ? "⏱️" : word;
+    if (word === "...") cell.classList.add("penalty");
   }
 
   if (playerName === name) {
@@ -168,19 +162,30 @@ socket.on("wordPlayed", ({ playerName, word, wordIndex }) => {
 });
 
 
-// ⚠️ 5. AFK
-socket.on("playerWarned", ({ playerName }) => {
-  showNotif("⚠️ " + playerName + " n'a pas joué !", "#ffd700");
+// 🔥 Pénalité -1 pt
+socket.on("playerPenalty", ({ playerName, score }) => {
+  const scoreEl = document.getElementById("score-" + playerName);
+  if (scoreEl) scoreEl.innerText = score + " pt" + (Math.abs(score) > 1 ? "s" : "");
+  showNotif("⏱️ " + playerName + " — 1 pt", "#ff4b5c");
 });
 
-socket.on("playerAutoEliminated", ({ playerName }) => {
+
+// 🔥 Déconnexion
+socket.on("playerDisconnected", ({ playerName }) => {
   const col = document.getElementById("col-" + playerName);
-  if (col) { col.style.opacity = "0.3"; col.style.filter = "grayscale(1)"; }
-  showNotif("❌ " + playerName + " AFK !", "#ff4b5c");
+  if (col) col.classList.add("disconnected");
+  showNotif("📵 " + playerName + " s'est déconnecté(e)", "#ffd700");
 });
 
 
-// ⏱️ 6. Timer
+// 🔥 Reconnexion
+socket.on("playerReconnected", ({ playerName }) => {
+  const col = document.getElementById("col-" + playerName);
+  if (col) col.classList.remove("disconnected");
+  showNotif("✅ " + playerName + " est de retour !", "#4dff91");
+});
+
+
 let clientTimerInterval;
 
 function startClientTimer(duration) {
@@ -211,7 +216,6 @@ function stopClientTimer() {
 }
 
 
-// 📤 7. Envoi mot
 function sendWord() {
   const input = document.getElementById("wordInput");
   if (!input.value.trim() || input.disabled) return;
@@ -228,7 +232,6 @@ document.getElementById("wordInput").addEventListener("keydown", (e) => {
 });
 
 
-// 🗳️ 8. Vote
 socket.on("startVote", ({ players: alivePlayers }) => {
   document.getElementById("inputZone").style.display = "none";
   document.querySelectorAll(".player-col").forEach(c => c.classList.remove("active"));
@@ -248,10 +251,11 @@ socket.on("startVote", ({ players: alivePlayers }) => {
 
     const card = document.createElement("div");
     card.className = "vote-card";
+    if (p.disconnected) card.classList.add("disabled");
     card.id = "votecard-" + p.name;
     card.innerHTML = `
       <div class="vote-card-emoji">${p.emoji}</div>
-      <div class="vote-card-name">${p.name}</div>
+      <div class="vote-card-name">${p.name}${p.disconnected ? " 📵" : ""}</div>
     `;
 
     card.onclick = () => {
@@ -275,7 +279,6 @@ socket.on("startVote", ({ players: alivePlayers }) => {
 });
 
 
-// ⬜ 9. Mr. White guess
 socket.on("mrWhiteGuessPhase", ({ playerName, timer }) => {
   document.getElementById("voteScreen").style.display = "none";
 
@@ -343,7 +346,6 @@ socket.on("mrWhiteGuessPhase", ({ playerName, timer }) => {
 });
 
 
-// 🏁 10. Résultat vote
 socket.on("voteResult", ({ wasUndercover, wasMrWhite, civilWord, undercoverWord, undercoverName, unanimous, scores, voteMap, mrWhiteGuessCorrect, mrWhiteGuess }) => {
 
   document.getElementById("voteScreen").style.display = "none";
@@ -395,17 +397,16 @@ socket.on("voteResult", ({ wasUndercover, wasMrWhite, civilWord, undercoverWord,
   } else if (iAmUndercover) {
     if (whoVotedAgainstMe.length === 0) {
       resultIcon = "✅";
-      resultText = "Tu étais l'Undergooner !<br><span style='font-size:18px;color:rgba(255,255,255,0.6);'>Personne ne t'a démasqué(e) — tu t'en es sorti(e) !</span>";
-      subText = "Tu gagnes des points pour chaque joueur qui ne t'a pas trouvé(e).";
+      resultText = "Tu étais l'Undergooner !<br><span style='font-size:18px;color:rgba(255,255,255,0.6);'>Personne ne t'a démasqué(e) !</span>";
+      subText = "+2 pts pour toi !";
     } else if (unanimous) {
       resultIcon = "❌";
-      resultText = "Tu étais l'Undergooner !<br><span style='font-size:18px;color:rgba(255,255,255,0.6);'>Tout le monde t'a démasqué(e) à l'unanimité !</span>";
-      subText = "Tu ne gagnes aucun point ce round.";
+      resultText = "Tu étais l'Undergooner !<br><span style='font-size:18px;color:rgba(255,255,255,0.6);'>Tout le monde t'a démasqué(e) !</span>";
+      subText = "0 point ce round.";
     } else {
       resultIcon = "❌";
-      resultText = `Tu étais l'Undergooner !<br><span style='font-size:18px;color:rgba(255,255,255,0.6);'>Tu as été démasqué(e) par <b style='color:white;'>${whoVotedAgainstMe.join(", ")}</b>.</span>`;
-      const notFound = scores.filter(p => p.name !== name && !whoVotedAgainstMe.includes(p.name));
-      subText = notFound.length > 0 ? `Tu gagnes des points grâce à ${notFound.map(p => p.name).join(", ")}.` : "";
+      resultText = `Tu étais l'Undergooner !<br><span style='font-size:18px;color:rgba(255,255,255,0.6);'>Démasqué(e) par <b style='color:white;'>${whoVotedAgainstMe.join(", ")}</b>.</span>`;
+      subText = whoVotedAgainstMe.length === 1 ? "+1 pt pour toi !" : "0 point ce round.";
     }
 
   } else if (iVotedForUndercover) {
@@ -460,7 +461,7 @@ socket.on("voteResult", ({ wasUndercover, wasMrWhite, civilWord, undercoverWord,
 
   scores.forEach(p => {
     const scoreEl = document.getElementById("score-" + p.name);
-    if (scoreEl) scoreEl.innerText = p.score + " pt" + (p.score > 1 ? "s" : "");
+    if (scoreEl) scoreEl.innerText = p.score + " pt" + (Math.abs(p.score) > 1 ? "s" : "");
   });
 
   if (isHost) {
@@ -480,7 +481,6 @@ socket.on("voteResult", ({ wasUndercover, wasMrWhite, civilWord, undercoverWord,
 });
 
 
-// 🔄 11. Nouveau round
 socket.on("newRoundCountdown", ({ round }) => {
   currentRound = round;
 
@@ -494,9 +494,7 @@ socket.on("newRoundCountdown", ({ round }) => {
   document.getElementById("resultZone").innerHTML = "";
   document.getElementById("inputZone").style.display = "none";
   document.querySelectorAll(".player-col").forEach(c => {
-    c.style.opacity = "1";
-    c.style.filter = "none";
-    c.classList.remove("active");
+    c.classList.remove("active", "disconnected");
   });
 
   const overlay = document.createElement("div");
@@ -532,7 +530,7 @@ socket.on("newRoundCountdown", ({ round }) => {
 });
 
 
-// 🏆 12. Fin de partie
+// 🏆 Fin de partie — overlay podium
 socket.on("gameOver", ({ scores }) => {
   document.getElementById("voteScreen").style.display = "none";
   document.getElementById("mrWhiteGuessScreen").style.display = "none";
@@ -541,31 +539,71 @@ socket.on("gameOver", ({ scores }) => {
 
   const sorted = [...scores].sort((a, b) => b.score - a.score);
 
-  let html = "<div class='gameover-screen'><h1>🏆 Fin de la partie !</h1><div class='scores-zone'>";
-  sorted.forEach((p, idx) => {
-    const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : "";
-    html += `
-      <div class="score-card">
-        <div class="score-card-emoji">${p.emoji}</div>
-        <div class="score-card-name">${medal} ${p.name}</div>
-        <div class="score-card-pts">${p.score} pts</div>
-      </div>
-    `;
-  });
-  html += "</div>";
-  if (isHost) {
-    html += `<button class="next-btn" id="restartBtn" style="margin-top:16px;">🔄 Rejouer</button>`;
-  }
-  html += "</div>";
-  document.getElementById("resultZone").innerHTML = html;
+  const overlay = document.createElement("div");
+  overlay.className = "gameover-overlay";
 
-  if (isHost) {
-    document.getElementById("restartBtn").onclick = () => socket.emit("nextRound");
+  const blur = document.createElement("div");
+  blur.className = "gameover-blur";
+  overlay.appendChild(blur);
+
+  const content = document.createElement("div");
+  content.className = "gameover-content";
+
+  let html = `
+    <div class="gameover-title">🏆 Fin de la partie !</div>
+    <div class="gameover-subtitle">Voici le classement final</div>
+    <div class="podium-zone">
+  `;
+
+  // Podium top 3
+  const podiumOrder = [1, 0, 2]; // 2ème, 1er, 3ème pour l'effet podium
+  const podiumClasses = ["second", "first", "third"];
+  const medals = ["🥈", "🥇", "🥉"];
+
+  podiumOrder.forEach((idx, pos) => {
+    if (sorted[idx]) {
+      html += `
+        <div class="podium-card ${podiumClasses[pos]}">
+          <div class="podium-medal">${medals[pos]}</div>
+          <div class="podium-emoji">${sorted[idx].emoji}</div>
+          <div class="podium-name">${sorted[idx].name}</div>
+          <div class="podium-pts">${sorted[idx].score} pts</div>
+          <div class="podium-bar"></div>
+        </div>
+      `;
+    }
+  });
+
+  html += `</div>`;
+
+  // Autres joueurs
+  if (sorted.length > 3) {
+    html += `<div class="others-zone">`;
+    sorted.slice(3).forEach((p, idx) => {
+      html += `
+        <div class="score-card">
+          <div class="score-card-emoji">${p.emoji}</div>
+          <div class="score-card-name">${idx + 4}. ${p.name}</div>
+          <div class="score-card-pts">${p.score} pts</div>
+        </div>
+      `;
+    });
+    html += `</div>`;
   }
+
+  // Bouton rejouer pour TOUS
+  html += `<button class="replay-btn" id="replayBtn">🔄 Rejouer</button>`;
+
+  content.innerHTML = html;
+  overlay.appendChild(content);
+  document.body.appendChild(overlay);
+
+  document.getElementById("replayBtn").onclick = () => {
+    socket.emit("backToLobbyRequest");
+  };
 });
 
 
-// 🔙 13. Retour lobby
 socket.on("backToLobby", () => {
   localStorage.removeItem("word");
   localStorage.removeItem("role");
