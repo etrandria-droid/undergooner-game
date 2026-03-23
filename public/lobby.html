@@ -24,9 +24,16 @@
       <span class="label">Code</span>
       <div class="code-container">
         <span id="roomCode" class="value"></span>
-        <button id="copyBtn" class="copy-btn">📂</button>
+        <button id="copyBtn" class="copy-btn">📋</button>
       </div>
     </div>
+  </div>
+
+  <!-- 🔥 Emoji selector dans le lobby -->
+  <div class="emoji-selector" style="margin: 8px 0;">
+    <button id="prevEmoji">◀</button>
+    <span id="lobbyEmoji" style="font-size:36px;">👽</span>
+    <button id="nextEmoji">▶</button>
   </div>
 
   <div id="playersZone" class="players-zone"></div>
@@ -44,6 +51,7 @@
     Lancer la partie
   </button>
 
+  <!-- Panel paramètres -->
   <div id="settingsPanel" style="display:none;">
     <div class="settings-box">
 
@@ -75,12 +83,15 @@
           <option value="20">20s</option>
           <option value="30" selected>30s</option>
           <option value="40">40s</option>
+          <option value="50">50s</option>
         </select>
       </div>
 
       <div class="setting-row">
         <span>Rounds</span>
         <select id="totalRounds">
+          <option value="3">3</option>
+          <option value="4">4</option>
           <option value="5">5</option>
           <option value="10" selected>10</option>
           <option value="15">15</option>
@@ -89,7 +100,7 @@
       </div>
 
       <div class="setting-row">
-        <span>Mots / round</span>
+        <span>Mots</span>
         <select id="wordsPerRound">
           <option value="2">2</option>
           <option value="3" selected>3</option>
@@ -117,7 +128,7 @@
         display: none;
       ">⚠️ Nécessite 6 joueurs minimum</p>
 
-      <button id="saveSettings" class="btn blue" style="margin-top:16px;width:auto;padding:12px 30px;">
+      <button id="saveSettings" class="btn blue" style="margin-top:16px;width:auto;padding:12px 30px;" id="saveSettingsBtn">
         Sauvegarder
       </button>
 

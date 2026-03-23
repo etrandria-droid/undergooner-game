@@ -670,7 +670,7 @@
     .new-round-label { font-size: 22px; font-weight: 700; color: rgba(255,255,255,0.5); letter-spacing: 2px; }
     .new-round-number { font-size: 120px; font-weight: 800; color: white; text-shadow: 0 0 40px rgba(30,86,253,0.8); animation: countPop 0.4s ease; }
 
-    .notif {
+   .notif {
       position: fixed;
       top: 20px;
       left: 50%;
@@ -681,6 +681,16 @@
       font-weight: 700;
       font-size: 14px;
       z-index: 999;
+    }
+
+    @keyframes inputUrgent {
+      0%, 100% { border-color: rgba(220,42,75,0.8); box-shadow: 0 0 15px rgba(220,42,75,0.4); }
+      50%       { border-color: rgba(220,42,75,0.2); box-shadow: none; }
+    }
+
+    .input-zone.urgent {
+      animation: inputUrgent 0.8s ease-in-out infinite;
+      border-color: rgba(220,42,75,0.8);
     }
   </style>
 </head>

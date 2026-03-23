@@ -66,7 +66,7 @@ const wordPairs = [
   { civil: "NEW YORK", undercover: "CHICAGO" },
   { civil: "DUBAI", undercover: "ABU DHABI" },
   { civil: "AMSTERDAM", undercover: "BRUXELLES" },
-  { civil: "ROME", undercover: "MADRID" },
+  { civil: "ROME", undercover: "MILAN" },
   { civil: "SYDNEY", undercover: "MELBOURNE" },
   { civil: "MIAMI", undercover: "LOS ANGELES" },
   { civil: "MOSCOU", undercover: "SAINT-PÉTERSBOURG" },
@@ -76,7 +76,7 @@ const wordPairs = [
   { civil: "BASKETBALL", undercover: "HANDBALL" },
   { civil: "BOXE", undercover: "MMA" },
   { civil: "SKI", undercover: "JETSKI" },
-  { civil: "SURF", undercover: "" },
+  { civil: "SURF", undercover: "WAKEBOARD" },
   { civil: "JUDO", undercover: "KARATÉ" },
   { civil: "NATATION", undercover: "WATER-POLO" },
   // 🎬 Séries / Films
@@ -94,25 +94,22 @@ const wordPairs = [
   { civil: "INTERSTELLAR", undercover: "GRAVITY" },
   { civil: "INCEPTION", undercover: "TENET" },
   { civil: "LE PARRAIN", undercover: "SCARFACE" },
-  { civil: "Harry Potter", undercover: "Hermione Granger" },
+  { civil: "HARRY POTTER", undercover: "HERMIONE GRANGER" },
   // 🎵 Musique
   { civil: "BOOBA", undercover: "KAARIS" },
   { civil: "DRAKE", undercover: "KENDRICK LAMAR" },
   { civil: "BEYONCÉ", undercover: "RIHANNA" },
   { civil: "TAYLOR SWIFT", undercover: "ARIANA GRANDE" },
   { civil: "THE WEEKND", undercover: "POST MALONE" },
-  { civil: "COLDPLAY", undercover: "MARROON 5" },
+  { civil: "COLDPLAY", undercover: "MAROON 5" },
   { civil: "NIRVANA", undercover: "ARCTIC MONKEYS" },
   { civil: "METALLICA", undercover: "AC/DC" },
-  { civil: "EMPEREREUR", undercover: "PRINCE" },
   { civil: "EMINEM", undercover: "JAY-Z" },
-  { civil: "COLDPLAY", undercover: "U2" },
-  { civil: "THEODORA", undercover: "SHAY" },
   { civil: "ANGÈLE", undercover: "STROMAE" },
   { civil: "PNL", undercover: "NEKFEU" },
   { civil: "SCH", undercover: "NINHO" },
-  { civil: "PIDI", undercover: "DRAKE" },
   { civil: "NICKI MINAJ", undercover: "CARDI B" },
+  { civil: "KANYE WEST", undercover: "TRAVIS SCOTT" },
   // 🦸 Super-héros
   { civil: "BATMAN", undercover: "IRON MAN" },
   { civil: "SUPERMAN", undercover: "THOR" },
@@ -121,7 +118,7 @@ const wordPairs = [
   { civil: "WONDER WOMAN", undercover: "BLACK WIDOW" },
   { civil: "DEADPOOL", undercover: "WOLVERINE" },
   { civil: "LE JOKER", undercover: "BOUFFON VERT" },
-  { civil: "Le soldat de l'hiver", undercover: "Captain America" },
+  { civil: "LE SOLDAT DE L'HIVER", undercover: "CAPTAIN AMERICA" },
   { civil: "VENOM", undercover: "CARNAGE" },
   { civil: "DOCTEUR STRANGE", undercover: "LOKI" },
   // 🌍 Nature
@@ -148,7 +145,7 @@ const wordPairs = [
   { civil: "NAPOLÉON", undercover: "CÉSAR" },
   { civil: "CLÉOPÂTRE", undercover: "NÉFERTITI" },
   { civil: "PICASSO", undercover: "DALÍ" },
-  { civil: "MACRON", undercover: "MELANCHON" },
+  { civil: "MACRON", undercover: "MÉLENCHON" },
   { civil: "JOHNNY DEPP", undercover: "BRAD PITT" },
   { civil: "LEONARDO DICAPRIO", undercover: "TOM HANKS" },
   // 🏠 Quotidien
@@ -177,7 +174,7 @@ const wordPairs = [
   { civil: "FRISSON", undercover: "VERTIGE" },
   { civil: "JALOUSIE", undercover: "OBSESSION" },
   { civil: "HONTE", undercover: "REGRET" },
-  { civil: "COURAGE", undercover: "LACHETÉ" },
+  { civil: "COURAGE", undercover: "LÂCHETÉ" },
   { civil: "NAUFRAGE", undercover: "NOYADE" },
   { civil: "MIRAGE", undercover: "ILLUSION D'OPTIQUE" },
   // 🎮 Jeux vidéo
@@ -256,11 +253,15 @@ io.on("connection", (socket) => {
     if (!room) { socket.emit("roomNotFound"); return; }
     if (room.started) { socket.emit("gameAlreadyStarted"); return; }
 
+    // 🔥 Pseudo en doublon
     const already = room.players.find(p => p.name.toLowerCase() === playerName.toLowerCase());
     if (already) {
-      already.id = socket.id;
-      socket.join(code);
-      socket.emit("updateLobby", room.players);
+      if (already.id === socket.id) {
+        socket.join(code);
+        socket.emit("updateLobby", room.players);
+        return;
+      }
+      socket.emit("nameTaken");
       return;
     }
 
@@ -314,6 +315,16 @@ io.on("connection", (socket) => {
     io.to(code).emit("settingsUpdated", room.settings);
   });
 
+  socket.on("updateEmoji", ({ code, emoji }) => {
+    const room = rooms[code];
+    if (!room) return;
+    const player = room.players.find(p => p.id === socket.id);
+    if (!player) return;
+    player.emoji = emoji;
+    localStorage_emoji = emoji;
+    io.to(code).emit("updateLobby", room.players);
+  });
+
   socket.on("startGame", () => {
     const roomCode = Object.keys(rooms).find(code =>
       rooms[code].players.find(p => p.id === socket.id)
@@ -354,12 +365,15 @@ io.on("connection", (socket) => {
     if (!roomCode) return;
     const room = rooms[roomCode];
 
-    // Reset complet pour rejouer
     room.started = false;
     room.currentRound = 1;
+    room.roundStartPlayerIndex = 0;
     room.votes = {};
     room.words = {};
     room.pendingReveal = null;
+    if (room.turnTimer) clearTimeout(room.turnTimer);
+    if (room.mrWhiteTimer) clearTimeout(room.mrWhiteTimer);
+
     room.players.forEach(p => {
       p.score = 0;
       p.eliminated = false;
@@ -420,7 +434,6 @@ io.on("connection", (socket) => {
     const r = room.pendingReveal;
 
     if (correct) {
-      // Max +2 pts selon votes reçus
       const pts = Math.min(r.votesAgainstMrWhite, 2);
       player.score += pts;
       if (r.mrWhiteVotedForUndercover) player.score += 1;
@@ -461,13 +474,11 @@ io.on("connection", (socket) => {
       if (!player) continue;
 
       if (room.started) {
-        // Marquer comme déconnecté pendant la game
         player.disconnected = true;
         io.to(code).emit("playerDisconnected", { playerName: player.name });
         continue;
       }
 
-      // Lobby : retirer le joueur
       const playerIndex = room.players.findIndex(p => p.id === socket.id);
       room.players.splice(playerIndex, 1);
       room.players.forEach((p, index) => { p.host = index === 0; });
@@ -490,8 +501,6 @@ function startRound(roomCode) {
   if (!room) return;
 
   room.started = true;
-  // 🔥 Rotation du premier joueur
-  room.currentPlayerIndex = room.roundStartPlayerIndex % room.players.length;
   room.currentWordIndex = 0;
   room.votes = {};
   room.votesSnapshot = {};
@@ -500,9 +509,13 @@ function startRound(roomCode) {
   room.totalRounds = room.settings.totalRounds || 10;
   room.wordsPerRound = room.settings.wordsPerRound || 3;
 
+  // 🔥 Fix rotation : on utilise roundStartPlayerIndex correctement
+  const activePlayers = room.players.filter(p => !p.disconnected);
+  room.roundStartPlayerIndex = room.roundStartPlayerIndex % activePlayers.length;
+  room.currentPlayerIndex = room.roundStartPlayerIndex;
+
   room.players.forEach(p => {
     p.eliminated = false;
-    p.disconnected = false;
     p.warned = false;
     p.hasUsedPower = false;
     p.role = null;
@@ -563,6 +576,7 @@ function startTurn(roomCode) {
   const activePlayers = room.players.filter(p => !p.disconnected);
   if (activePlayers.length === 0) return;
 
+  // 🔥 Fin du round → vote
   if (room.currentWordIndex >= room.wordsPerRound) {
     io.to(roomCode).emit("startVote", {
       players: room.players.map(p => ({
@@ -574,8 +588,12 @@ function startTurn(roomCode) {
     return;
   }
 
-  room.currentPlayerIndex = room.currentPlayerIndex % activePlayers.length;
-  const player = activePlayers[room.currentPlayerIndex];
+  // 🔥 Fix : index basé sur activePlayers avec offset du round
+  const startOffset = room.roundStartPlayerIndex % activePlayers.length;
+  const totalTurnsThisWord = room.currentPlayerIndex - room.roundStartPlayerIndex;
+  const adjustedIndex = (startOffset + (room.currentPlayerIndex % activePlayers.length)) % activePlayers.length;
+
+  const player = activePlayers[adjustedIndex];
   if (!player) return;
 
   io.to(roomCode).emit("newTurn", {
@@ -585,7 +603,6 @@ function startTurn(roomCode) {
     timer: room.settings.timer,
   });
 
-  // 🔥 Pas d'AFK — juste pénalité -1 pt après timeout
   room.turnTimer = setTimeout(() => {
     player.score -= 1;
 
@@ -611,14 +628,19 @@ function startTurn(roomCode) {
 function advanceTurn(roomCode) {
   const room = rooms[roomCode];
   if (!room) return;
+
   const activePlayers = room.players.filter(p => !p.disconnected);
+  if (activePlayers.length === 0) return;
+
   room.currentPlayerIndex++;
-  if (room.currentPlayerIndex >= activePlayers.length) {
-    room.currentPlayerIndex = 0;
+
+  // 🔥 Quand tout le monde a joué pour ce mot → mot suivant
+  const turnsThisWord = room.currentPlayerIndex - (room.currentWordIndex * activePlayers.length) - room.roundStartPlayerIndex % activePlayers.length;
+
+  if (turnsThisWord >= activePlayers.length) {
     room.currentWordIndex++;
-    // 🔥 Incrémenter le joueur de départ pour le prochain round
-    room.roundStartPlayerIndex = (room.roundStartPlayerIndex + 1) % room.players.length;
   }
+
   startTurn(roomCode);
 }
 
@@ -651,16 +673,12 @@ function resolveVote(roomCode) {
     ? Object.entries(voteMap).filter(([_, t]) => t === mrWhitePlayer.name).map(([v]) => v)
     : [];
 
-  // 🔥 Points civils qui ont voté undergooner
   room.players.forEach(p => {
     if (p.role !== "undercover" && p.role !== "mrwhite") {
-      if (voteMap[p.name] === undercoverName) {
-        p.score += 1;
-      }
+      if (voteMap[p.name] === undercoverName) p.score += 1;
     }
   });
 
-  // 🔥 Undergooner : max +2 pts
   if (undercover) {
     const notVotedAgainst = room.players.filter(p =>
       p.name !== undercover.name && voteMap[p.name] !== undercover.name
@@ -671,27 +689,17 @@ function resolveVote(roomCode) {
   room.votesSnapshot = { ...count };
   room.votes = {};
 
-  // 🔥 Mr. White phase guess
   if (mrWhitePlayer && whoVotedMrWhite.length > 0) {
     room.pendingReveal = {
-      civilWord,
-      undercoverWord,
-      undercoverName,
-      unanimous,
-      voteMap,
+      civilWord, undercoverWord, undercoverName, unanimous, voteMap,
       whoVotedMrWhite,
       votesAgainstMrWhite: whoVotedMrWhite.length,
       mrWhiteVotedForUndercover: voteMap[mrWhitePlayer.name] === undercoverName,
       scores: room.players.map(p => ({ name: p.name, emoji: p.emoji, score: p.score })),
-      wasMrWhite: true,
-      wasUndercover: false,
-      eliminated: mrWhitePlayer.name,
+      wasMrWhite: true, wasUndercover: false, eliminated: mrWhitePlayer.name,
     };
 
-    io.to(roomCode).emit("mrWhiteGuessPhase", {
-      playerName: mrWhitePlayer.name,
-      timer: 30,
-    });
+    io.to(roomCode).emit("mrWhiteGuessPhase", { playerName: mrWhitePlayer.name, timer: 30 });
 
     room.mrWhiteTimer = setTimeout(() => {
       room.players.forEach(p => {
@@ -699,9 +707,7 @@ function resolveVote(roomCode) {
       });
       room.pendingReveal.mrWhiteGuessCorrect = false;
       room.pendingReveal.mrWhiteGuess = null;
-      room.pendingReveal.scores = room.players.map(p => ({
-        name: p.name, emoji: p.emoji, score: p.score
-      }));
+      room.pendingReveal.scores = room.players.map(p => ({ name: p.name, emoji: p.emoji, score: p.score }));
       revealResult(roomCode);
     }, 31000);
 
@@ -709,16 +715,10 @@ function resolveVote(roomCode) {
   }
 
   io.to(roomCode).emit("voteResult", {
-    wasUndercover: false,
-    wasMrWhite: false,
-    civilWord,
-    undercoverWord,
-    undercoverName,
-    unanimous,
-    voteMap,
+    wasUndercover: false, wasMrWhite: false,
+    civilWord, undercoverWord, undercoverName, unanimous, voteMap,
     scores: room.players.map(p => ({ name: p.name, emoji: p.emoji, score: p.score })),
-    mrWhiteGuessCorrect: null,
-    mrWhiteGuess: null,
+    mrWhiteGuessCorrect: null, mrWhiteGuess: null,
   });
 }
 
@@ -727,16 +727,11 @@ function revealResult(roomCode) {
   if (!room || !room.pendingReveal) return;
   const r = room.pendingReveal;
   io.to(roomCode).emit("voteResult", {
-    wasUndercover: r.wasUndercover,
-    wasMrWhite: r.wasMrWhite,
-    civilWord: r.civilWord,
-    undercoverWord: r.undercoverWord,
-    undercoverName: r.undercoverName,
-    unanimous: r.unanimous,
-    voteMap: r.voteMap || {},
-    scores: r.scores,
-    mrWhiteGuessCorrect: r.mrWhiteGuessCorrect,
-    mrWhiteGuess: r.mrWhiteGuess,
+    wasUndercover: r.wasUndercover, wasMrWhite: r.wasMrWhite,
+    civilWord: r.civilWord, undercoverWord: r.undercoverWord,
+    undercoverName: r.undercoverName, unanimous: r.unanimous,
+    voteMap: r.voteMap || {}, scores: r.scores,
+    mrWhiteGuessCorrect: r.mrWhiteGuessCorrect, mrWhiteGuess: r.mrWhiteGuess,
   });
   room.pendingReveal = null;
 }

@@ -193,10 +193,12 @@ function startClientTimer(duration) {
   let t = duration;
   const bar = document.getElementById("timerBar");
   const count = document.getElementById("timerCount");
+  const inputZone = document.getElementById("inputZone");
   bar.style.transition = "none";
   bar.style.width = "100%";
   bar.classList.remove("urgent");
   count.classList.remove("urgent");
+  inputZone.classList.remove("urgent");
   count.innerText = t + "s";
   setTimeout(() => { bar.style.transition = "width 1s linear"; }, 50);
 
@@ -204,8 +206,19 @@ function startClientTimer(duration) {
     t--;
     bar.style.width = ((t / duration) * 100) + "%";
     count.innerText = t + "s";
-    if (t <= 10) { bar.classList.add("urgent"); count.classList.add("urgent"); }
-    if (t <= 0) stopClientTimer();
+    if (t <= 10) {
+      bar.classList.add("urgent");
+      count.classList.add("urgent");
+      inputZone.classList.add("urgent");
+    }
+    // 🔥 Validation auto à 0
+    if (t <= 0) {
+      stopClientTimer();
+      const input = document.getElementById("wordInput");
+      if (input && !input.disabled && input.value.trim()) {
+        sendWord();
+      }
+    }
   }, 1000);
 }
 

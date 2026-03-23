@@ -3,21 +3,43 @@ const socket = io();
 const name = localStorage.getItem("name");
 const code = localStorage.getItem("roomCode");
 const roomName = localStorage.getItem("roomName");
-const emoji = localStorage.getItem("emoji");
+let currentEmoji = localStorage.getItem("emoji") || "👽";
 
 document.getElementById("lobbyName").innerText = roomName;
 document.getElementById("roomCode").innerText = code;
+document.getElementById("lobbyEmoji").innerText = currentEmoji;
 
 socket.on("connect", () => {
   socket.emit("joinRoom", {
     playerName: name,
     code: code,
-    emoji: emoji
+    emoji: currentEmoji
   });
 });
 
 document.getElementById("copyBtn").onclick = () => {
   navigator.clipboard.writeText(code);
+};
+
+// 🔥 Changement emoji dans le lobby
+const emojis = ["👽","🤖","🧙‍♂️","👩‍🚀","💩","👸","👺"];
+let emojiIndex = emojis.indexOf(currentEmoji);
+if (emojiIndex === -1) emojiIndex = 0;
+
+document.getElementById("prevEmoji").onclick = () => {
+  emojiIndex = (emojiIndex - 1 + emojis.length) % emojis.length;
+  currentEmoji = emojis[emojiIndex];
+  document.getElementById("lobbyEmoji").innerText = currentEmoji;
+  localStorage.setItem("emoji", currentEmoji);
+  socket.emit("updateEmoji", { code, emoji: currentEmoji });
+};
+
+document.getElementById("nextEmoji").onclick = () => {
+  emojiIndex = (emojiIndex + 1) % emojis.length;
+  currentEmoji = emojis[emojiIndex];
+  document.getElementById("lobbyEmoji").innerText = currentEmoji;
+  localStorage.setItem("emoji", currentEmoji);
+  socket.emit("updateEmoji", { code, emoji: currentEmoji });
 };
 
 const settingsBtn = document.getElementById("settingsBtn");
@@ -32,6 +54,8 @@ let savedSettings = {
   mrBlack: false
 };
 
+let isHost = false;
+
 function restoreSettings() {
   document.getElementById("maxPlayers").value = savedSettings.maxPlayers;
   document.getElementById("timer").value = savedSettings.timer;
@@ -41,9 +65,16 @@ function restoreSettings() {
   document.getElementById("mrBlack").checked = savedSettings.mrBlack;
 }
 
+function setSettingsReadOnly(readOnly) {
+  const inputs = settingsPanel.querySelectorAll("select, input[type='checkbox']");
+  inputs.forEach(el => { el.disabled = readOnly; });
+  const saveBtn = document.getElementById("saveSettings");
+  if (saveBtn) saveBtn.style.display = readOnly ? "none" : "block";
+}
+
 settingsBtn.onclick = () => {
   if (settingsPanel.style.display === "block") {
-    restoreSettings();
+    if (isHost) restoreSettings();
     settingsPanel.style.display = "none";
   } else {
     settingsPanel.style.display = "block";
@@ -51,7 +82,7 @@ settingsBtn.onclick = () => {
 };
 
 document.getElementById("closeSettings").onclick = () => {
-  restoreSettings();
+  if (isHost) restoreSettings();
   settingsPanel.style.display = "none";
 };
 
@@ -97,22 +128,19 @@ socket.on("updateLobby", (players) => {
   const me = players.find(p => p.name === name);
   const msg = document.getElementById("minPlayersMsg");
 
-  // 🔥 message minimum 3 joueurs
+  isHost = me && me.host;
+
   if (players.length >= 3) {
     if (msg) msg.style.display = "none";
   } else {
     if (msg) msg.style.display = "block";
   }
 
-  // 🔥 engrenage uniquement pour le host
-  if (me && me.host) {
-    settingsBtn.style.display = "flex";
-  } else {
-    settingsBtn.style.display = "none";
-  }
+  // 🔥 Engrenage visible pour tous, mais éditable seulement pour le host
+  settingsBtn.style.display = "flex";
+  setSettingsReadOnly(!isHost);
 
-  // 🔥 bouton start
-  if (me && me.host && players.length >= 3) {
+  if (isHost && players.length >= 3) {
     startBtn.className = "btn red big-action";
     startBtn.disabled = false;
   } else {
@@ -120,7 +148,6 @@ socket.on("updateLobby", (players) => {
     startBtn.disabled = true;
   }
 
-  // 🔥 Mr. White et Mr. Black — désactiver si moins de 6 joueurs
   const mrWhiteCheck = document.getElementById("mrWhite");
   const mrBlackCheck = document.getElementById("mrBlack");
   const mrWhiteRow = document.getElementById("mrWhiteRow");
@@ -134,8 +161,13 @@ socket.on("updateLobby", (players) => {
     if (mrBlackRow) mrBlackRow.style.opacity = "0.4";
     if (mrMinMsg) mrMinMsg.style.display = "block";
   } else {
-    if (mrWhiteCheck) mrWhiteCheck.disabled = false;
-    if (mrBlackCheck) mrBlackCheck.disabled = false;
+    if (!isHost) {
+      if (mrWhiteCheck) mrWhiteCheck.disabled = true;
+      if (mrBlackCheck) mrBlackCheck.disabled = true;
+    } else {
+      if (mrWhiteCheck) mrWhiteCheck.disabled = false;
+      if (mrBlackCheck) mrBlackCheck.disabled = false;
+    }
     if (mrWhiteRow) mrWhiteRow.style.opacity = "1";
     if (mrBlackRow) mrBlackRow.style.opacity = "1";
     if (mrMinMsg) mrMinMsg.style.display = "none";
@@ -154,11 +186,10 @@ socket.on("settingsUpdated", (settings) => {
   restoreSettings();
 });
 
-socket.on("countdown", (num) => {
-  const zone = document.getElementById("playersZone");
-  zone.innerHTML = `
-    <h1 style="font-size:70px; color:white;">${num}</h1>
-  `;
+// 🔥 Pseudo déjà pris
+socket.on("nameTaken", () => {
+  alert("❌ Ce pseudo est déjà utilisé dans ce salon !");
+  window.location.href = "join.html";
 });
 
 socket.on("startCountdown", (data) => {
