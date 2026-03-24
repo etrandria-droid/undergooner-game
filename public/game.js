@@ -162,7 +162,6 @@ socket.on("wordPlayed", ({ playerName, word, wordIndex }) => {
 });
 
 
-// 🔥 Pénalité -1 pt
 socket.on("playerPenalty", ({ playerName, score }) => {
   const scoreEl = document.getElementById("score-" + playerName);
   if (scoreEl) scoreEl.innerText = score + " pt" + (Math.abs(score) > 1 ? "s" : "");
@@ -170,7 +169,6 @@ socket.on("playerPenalty", ({ playerName, score }) => {
 });
 
 
-// 🔥 Déconnexion
 socket.on("playerDisconnected", ({ playerName }) => {
   const col = document.getElementById("col-" + playerName);
   if (col) col.classList.add("disconnected");
@@ -178,7 +176,6 @@ socket.on("playerDisconnected", ({ playerName }) => {
 });
 
 
-// 🔥 Reconnexion
 socket.on("playerReconnected", ({ playerName }) => {
   const col = document.getElementById("col-" + playerName);
   if (col) col.classList.remove("disconnected");
@@ -211,7 +208,6 @@ function startClientTimer(duration) {
       count.classList.add("urgent");
       inputZone.classList.add("urgent");
     }
-    // 🔥 Validation auto à 0
     if (t <= 0) {
       stopClientTimer();
       const input = document.getElementById("wordInput");
@@ -259,6 +255,9 @@ socket.on("startVote", ({ players: alivePlayers }) => {
   document.getElementById("voteConfirmBtn").style.display = "none";
   document.getElementById("voteWaiting").innerText = "";
 
+  // 🔥 stocker les players pour la révélation des votes
+  window._votePlayers = alivePlayers;
+
   alivePlayers.forEach(p => {
     if (p.name === name) return;
 
@@ -269,6 +268,8 @@ socket.on("startVote", ({ players: alivePlayers }) => {
     card.innerHTML = `
       <div class="vote-card-emoji">${p.emoji}</div>
       <div class="vote-card-name">${p.name}${p.disconnected ? " 📵" : ""}</div>
+      <div class="vote-card-status" id="vstatus-${p.name}"></div>
+      <div class="vote-card-voters" id="voters-${p.name}"></div>
     `;
 
     card.onclick = () => {
@@ -289,6 +290,30 @@ socket.on("startVote", ({ players: alivePlayers }) => {
     document.getElementById("voteWaiting").innerText = "✅ Vote enregistré — en attente des autres...";
     socket.emit("vote", { target: selectedVote });
   };
+});
+
+
+// 🔥 Quelqu'un a voté — afficher ✅ sur sa carte dans la zone waiting
+socket.on("playerVoted", ({ playerName }) => {
+  const waiting = document.getElementById("voteWaiting");
+  if (!waiting) return;
+
+  // Trouver l'emoji du joueur
+  const allPlayers = JSON.parse(localStorage.getItem("players") || "[]");
+  const voter = allPlayers.find(p => p.name === playerName);
+  const emoji = voter ? voter.emoji : "✅";
+
+  // Afficher dans la zone waiting
+  const existing = waiting.innerText;
+  if (playerName === name) return; // on sait déjà qu'on a voté
+
+  if (!existing.includes(playerName)) {
+    const span = document.createElement("span");
+    span.style.cssText = "margin: 0 4px; font-size: 14px;";
+    span.innerText = emoji + " " + playerName + " ✅";
+    if (waiting.children.length === 0 && !existing) waiting.innerText = "";
+    waiting.appendChild(span);
+  }
 });
 
 
@@ -361,136 +386,153 @@ socket.on("mrWhiteGuessPhase", ({ playerName, timer }) => {
 
 socket.on("voteResult", ({ wasUndercover, wasMrWhite, civilWord, undercoverWord, undercoverName, unanimous, scores, voteMap, mrWhiteGuessCorrect, mrWhiteGuess }) => {
 
-  document.getElementById("voteScreen").style.display = "none";
-  document.getElementById("mrWhiteGuessScreen").style.display = "none";
-  if (mrWhiteTimerInterval) clearInterval(mrWhiteTimerInterval);
-
-  const resultZone = document.getElementById("resultZone");
-  resultZone.innerHTML = "";
-
-  const result = document.createElement("div");
-  result.className = "result-screen";
-
-  const myVote = voteMap ? voteMap[name] : null;
-  const iVotedForUndercover = myVote === undercoverName;
-  const iAmUndercover = name === undercoverName;
-
-  const whoFoundUndercover = voteMap
-    ? Object.entries(voteMap)
-        .filter(([voter, target]) => target === undercoverName && voter !== name)
-        .map(([voter]) => voter)
-    : [];
-
-  const whoVotedAgainstMe = iAmUndercover && voteMap
-    ? Object.entries(voteMap).filter(([_, target]) => target === name).map(([voter]) => voter)
-    : [];
-
-  let resultIcon = "";
-  let resultText = "";
-  let subText = "";
-
-  if (wasMrWhite) {
-    if (mrWhiteGuessCorrect) {
-      resultIcon = "⬜";
-      resultText = "Mr. White a deviné le mot civil !";
-      subText = iVotedForUndercover
-        ? "Tu avais voté pour l'Undergooner — tu gagnes ton point !"
-        : "Mr. White gagne ses points.";
-    } else {
-      const iVotedMrWhite = myVote && myVote !== undercoverName && !iAmUndercover;
-      resultIcon = iVotedForUndercover || iVotedMrWhite ? "✅" : "❌";
-      resultText = "Mr. White n'a pas deviné le mot civil.";
-      subText = iVotedForUndercover
-        ? "Tu avais voté pour l'Undergooner — tu gagnes ton point !"
-        : iVotedMrWhite
-          ? "Tu avais voté pour Mr. White — tu gagnes ton point !"
-          : "Tu n'as pas trouvé l'Undergooner.";
-    }
-
-  } else if (iAmUndercover) {
-    if (whoVotedAgainstMe.length === 0) {
-      resultIcon = "✅";
-      resultText = "Tu étais l'Undergooner !<br><span style='font-size:18px;color:rgba(255,255,255,0.6);'>Personne ne t'a démasqué(e) !</span>";
-      subText = "+2 pts pour toi !";
-    } else if (unanimous) {
-      resultIcon = "❌";
-      resultText = "Tu étais l'Undergooner !<br><span style='font-size:18px;color:rgba(255,255,255,0.6);'>Tout le monde t'a démasqué(e) !</span>";
-      subText = "0 point ce round.";
-    } else {
-      resultIcon = "❌";
-      resultText = `Tu étais l'Undergooner !<br><span style='font-size:18px;color:rgba(255,255,255,0.6);'>Démasqué(e) par <b style='color:white;'>${whoVotedAgainstMe.join(", ")}</b>.</span>`;
-      subText = whoVotedAgainstMe.length === 1 ? "+1 pt pour toi !" : "0 point ce round.";
-    }
-
-  } else if (iVotedForUndercover) {
-    if (unanimous) {
-      resultIcon = "✅";
-      resultText = `<b>${undercoverName}</b> était l'Undergooner !`;
-      subText = "Bravo, vous l'avez démasqué(e) à l'unanimité !";
-    } else if (whoFoundUndercover.length === 0) {
-      resultIcon = "✅";
-      resultText = `<b>${undercoverName}</b> était l'Undergooner !`;
-      subText = "Tu l'as démasqué(e) tout(e) seul(e) !";
-    } else {
-      resultIcon = "✅";
-      resultText = `<b>${undercoverName}</b> était l'Undergooner !`;
-      subText = `Tu l'as démasqué(e) avec <b>${whoFoundUndercover.join(", ")}</b> !`;
-    }
-
-  } else {
-    resultIcon = "❌";
-    const votedName = myVote || "?";
-    resultText = `<b>${votedName}</b> était innocent(e)...`;
-    subText = `L'Undergooner était <b>${undercoverName}</b>.`;
+  // 🔥 Révéler les votes sur les cartes (1.5s avant d'afficher le résultat)
+  if (voteMap) {
+    const allPlayers = JSON.parse(localStorage.getItem("players") || "[]");
+    Object.entries(voteMap).forEach(([voter, target]) => {
+      const voterPlayer = allPlayers.find(p => p.name === voter);
+      const targetCard = document.getElementById("voters-" + target);
+      if (targetCard && voterPlayer) {
+        const span = document.createElement("span");
+        span.className = "voter-emoji";
+        span.innerText = voterPlayer.emoji;
+        targetCard.appendChild(span);
+      }
+    });
   }
 
-  let html = `
-    <div class="result-icon">${resultIcon}</div>
-    <div class="result-main-text">${resultText}</div>
-    <p style="color:rgba(255,255,255,0.65);font-size:16px;font-weight:600;margin:6px 0 10px;">${subText}</p>
-    <div class="result-words">
-      <span class="civil-word">🟢 Mot civil : <b>${civilWord}</b></span>
-      <span class="undercover-word">🔴 Mot Undergooner : <b>${undercoverWord}</b></span>
-    </div>
-  `;
+  setTimeout(() => {
+    document.getElementById("voteScreen").style.display = "none";
+    document.getElementById("mrWhiteGuessScreen").style.display = "none";
+    if (mrWhiteTimerInterval) clearInterval(mrWhiteTimerInterval);
 
-  if (mrWhiteGuess) {
-    html += `<p style="color:rgba(255,255,255,0.4);font-size:13px;margin:4px 0;">
-      Mr. White avait répondu : <b style="color:white;">${mrWhiteGuess}</b>
-    </p>`;
-  }
+    const resultZone = document.getElementById("resultZone");
+    resultZone.innerHTML = "";
 
-  html += `<div class="scores-zone">`;
-  scores.forEach(p => {
-    html += `
-      <div class="score-card">
-        <div class="score-card-emoji">${p.emoji}</div>
-        <div class="score-card-name">${p.name}</div>
-        <div class="score-card-pts">${p.score} pts</div>
+    const result = document.createElement("div");
+    result.className = "result-screen";
+
+    const myVote = voteMap ? voteMap[name] : null;
+    const iVotedForUndercover = myVote === undercoverName;
+    const iAmUndercover = name === undercoverName;
+
+    const whoFoundUndercover = voteMap
+      ? Object.entries(voteMap)
+          .filter(([voter, target]) => target === undercoverName && voter !== name)
+          .map(([voter]) => voter)
+      : [];
+
+    const whoVotedAgainstMe = iAmUndercover && voteMap
+      ? Object.entries(voteMap).filter(([_, target]) => target === name).map(([voter]) => voter)
+      : [];
+
+    let resultIcon = "";
+    let resultText = "";
+    let subText = "";
+
+    if (wasMrWhite) {
+      if (mrWhiteGuessCorrect) {
+        resultIcon = "⬜";
+        resultText = "Mr. White a deviné le mot civil !";
+        subText = iVotedForUndercover
+          ? "Tu avais voté pour l'Undergooner — tu gagnes ton point !"
+          : "Mr. White gagne ses points.";
+      } else {
+        const iVotedMrWhite = myVote && myVote !== undercoverName && !iAmUndercover;
+        resultIcon = iVotedForUndercover || iVotedMrWhite ? "✅" : "❌";
+        resultText = "Mr. White n'a pas deviné le mot civil.";
+        subText = iVotedForUndercover
+          ? "Tu avais voté pour l'Undergooner — tu gagnes ton point !"
+          : iVotedMrWhite
+            ? "Tu avais voté pour Mr. White — tu gagnes ton point !"
+            : "Tu n'as pas trouvé l'Undergooner.";
+      }
+
+    } else if (iAmUndercover) {
+      if (whoVotedAgainstMe.length === 0) {
+        resultIcon = "✅";
+        resultText = "Tu étais l'Undergooner !<br><span style='font-size:18px;color:rgba(255,255,255,0.6);'>Personne ne t'a démasqué(e) !</span>";
+        subText = "+2 pts pour toi !";
+      } else if (unanimous) {
+        resultIcon = "❌";
+        resultText = "Tu étais l'Undergooner !<br><span style='font-size:18px;color:rgba(255,255,255,0.6);'>Tout le monde t'a démasqué(e) !</span>";
+        subText = "0 point ce round.";
+      } else {
+        resultIcon = "❌";
+        resultText = `Tu étais l'Undergooner !<br><span style='font-size:18px;color:rgba(255,255,255,0.6);'>Démasqué(e) par <b style='color:white;'>${whoVotedAgainstMe.join(", ")}</b>.</span>`;
+        subText = whoVotedAgainstMe.length === 1 ? "+1 pt pour toi !" : "0 point ce round.";
+      }
+
+    } else if (iVotedForUndercover) {
+      if (unanimous) {
+        resultIcon = "✅";
+        resultText = `<b>${undercoverName}</b> était l'Undergooner !`;
+        subText = "Bravo, vous l'avez démasqué(e) à l'unanimité !";
+      } else if (whoFoundUndercover.length === 0) {
+        resultIcon = "✅";
+        resultText = `<b>${undercoverName}</b> était l'Undergooner !`;
+        subText = "Tu l'as démasqué(e) tout(e) seul(e) !";
+      } else {
+        resultIcon = "✅";
+        resultText = `<b>${undercoverName}</b> était l'Undergooner !`;
+        subText = `Tu l'as démasqué(e) avec <b>${whoFoundUndercover.join(", ")}</b> !`;
+      }
+
+    } else {
+      resultIcon = "❌";
+      const votedName = myVote || "?";
+      resultText = `<b>${votedName}</b> était innocent(e)...`;
+      subText = `L'Undergooner était <b>${undercoverName}</b>.`;
+    }
+
+    let html = `
+      <div class="result-icon">${resultIcon}</div>
+      <div class="result-main-text">${resultText}</div>
+      <p style="color:rgba(255,255,255,0.65);font-size:16px;font-weight:600;margin:6px 0 10px;">${subText}</p>
+      <div class="result-words">
+        <span class="civil-word">🟢 Mot civil : <b>${civilWord}</b></span>
+        <span class="undercover-word">🔴 Mot Undergooner : <b>${undercoverWord}</b></span>
       </div>
     `;
-  });
-  html += `</div>`;
 
-  scores.forEach(p => {
-    const scoreEl = document.getElementById("score-" + p.name);
-    if (scoreEl) scoreEl.innerText = p.score + " pt" + (Math.abs(p.score) > 1 ? "s" : "");
-  });
+    if (mrWhiteGuess) {
+      html += `<p style="color:rgba(255,255,255,0.4);font-size:13px;margin:4px 0;">
+        Mr. White avait répondu : <b style="color:white;">${mrWhiteGuess}</b>
+      </p>`;
+    }
 
-  if (isHost) {
-    html += `<button class="next-btn" id="nextRoundBtn">Suivant →</button>`;
-  } else {
-    html += `<p style="color:rgba(255,255,255,0.35);font-size:12px;margin-top:10px;">⏳ En attente du host...</p>`;
-  }
+    html += `<div class="scores-zone">`;
+    scores.forEach(p => {
+      html += `
+        <div class="score-card">
+          <div class="score-card-emoji">${p.emoji}</div>
+          <div class="score-card-name">${p.name}</div>
+          <div class="score-card-pts">${p.score} pts</div>
+        </div>
+      `;
+    });
+    html += `</div>`;
 
-  result.innerHTML = html;
-  resultZone.appendChild(result);
+    scores.forEach(p => {
+      const scoreEl = document.getElementById("score-" + p.name);
+      if (scoreEl) scoreEl.innerText = p.score + " pt" + (Math.abs(p.score) > 1 ? "s" : "");
+    });
 
-  if (isHost) {
-    document.getElementById("nextRoundBtn").onclick = () => {
-      socket.emit("nextRound");
-    };
-  }
+    if (isHost) {
+      html += `<button class="next-btn" id="nextRoundBtn">Suivant →</button>`;
+    } else {
+      html += `<p style="color:rgba(255,255,255,0.35);font-size:12px;margin-top:10px;">⏳ En attente du host...</p>`;
+    }
+
+    result.innerHTML = html;
+    resultZone.appendChild(result);
+
+    if (isHost) {
+      document.getElementById("nextRoundBtn").onclick = () => {
+        socket.emit("nextRound");
+      };
+    }
+  }, 1500);
 });
 
 
@@ -543,7 +585,6 @@ socket.on("newRoundCountdown", ({ round }) => {
 });
 
 
-// 🏆 Fin de partie — overlay podium
 socket.on("gameOver", ({ scores }) => {
   document.getElementById("voteScreen").style.display = "none";
   document.getElementById("mrWhiteGuessScreen").style.display = "none";
@@ -568,8 +609,7 @@ socket.on("gameOver", ({ scores }) => {
     <div class="podium-zone">
   `;
 
-  // Podium top 3
-  const podiumOrder = [1, 0, 2]; // 2ème, 1er, 3ème pour l'effet podium
+  const podiumOrder = [1, 0, 2];
   const podiumClasses = ["second", "first", "third"];
   const medals = ["🥈", "🥇", "🥉"];
 
@@ -589,7 +629,6 @@ socket.on("gameOver", ({ scores }) => {
 
   html += `</div>`;
 
-  // Autres joueurs
   if (sorted.length > 3) {
     html += `<div class="others-zone">`;
     sorted.slice(3).forEach((p, idx) => {
@@ -604,7 +643,6 @@ socket.on("gameOver", ({ scores }) => {
     html += `</div>`;
   }
 
-  // Bouton rejouer pour TOUS
   html += `<button class="replay-btn" id="replayBtn">🔄 Rejouer</button>`;
 
   content.innerHTML = html;

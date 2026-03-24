@@ -7,7 +7,7 @@ const emojiDisplay = document.getElementById("emoji");
 const nameInput = document.getElementById("name");
 const roomInput = document.getElementById("roomName");
 
-nameInput.maxLength = 9;
+nameInput.maxLength = 12;
 
 document.getElementById("prev").onclick = () => {
   index = (index - 1 + emojis.length) % emojis.length;
@@ -25,7 +25,6 @@ function shake(el){
 }
 
 document.getElementById("createBtn").onclick = () => {
-
   const name = nameInput.value.trim();
   const room = roomInput.value.trim();
 
@@ -43,11 +42,9 @@ document.getElementById("createBtn").onclick = () => {
 };
 
 socket.on("roomCreated", ({ code, room }) => {
-
   localStorage.setItem("name", nameInput.value.trim());
   localStorage.setItem("roomCode", code);
   localStorage.setItem("roomName", room);
   localStorage.setItem("emoji", emojis[index]);
-
   window.location.href = "lobby.html";
 });

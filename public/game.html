@@ -245,7 +245,6 @@
       text-align: center;
     }
 
-    /* 🔥 JOUEUR ACTIF — flottement */
     .player-col.active .player-header {
       background: rgba(255,215,0,0.08);
       border-bottom-color: rgba(255,215,0,0.3);
@@ -265,7 +264,6 @@
       100% { transform: translateY(0px) scale(1); }
     }
 
-    /* Indicateur ▶ au dessus de l'emoji actif */
     .player-col.active .player-header::before {
       content: '▼';
       position: absolute;
@@ -282,7 +280,6 @@
       50%       { transform: translateX(-50%) translateY(3px); }
     }
 
-    /* 🔥 DÉCONNECTÉ */
     .player-col.disconnected { opacity: 0.3; filter: grayscale(1); }
     .player-col.disconnected .player-name { color: rgba(255,255,255,0.3); }
 
@@ -324,8 +321,8 @@
 
     .turn-info {
       color: rgba(255,255,255,0.8);
-      font-size: 18px;
-      font-weight: 700;
+      font-size: 22px;
+      font-weight: 800;
       min-width: 200px;
     }
 
@@ -399,9 +396,30 @@
     .vote-card:hover:not(.disabled) { border-color: rgba(220,42,75,0.5); background: rgba(220,42,75,0.06); transform: scale(1.05); }
     .vote-card.selected { border-color: #ff4b5c; background: rgba(220,42,75,0.12); box-shadow: 0 0 20px rgba(220,42,75,0.3); }
     .vote-card.disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+    .vote-card.voted { border-color: rgba(77,255,145,0.5); }
 
     .vote-card-emoji { font-size: 34px; }
     .vote-card-name { font-size: 13px; font-weight: 700; color: white; margin-top: 6px; }
+    .vote-card-status { font-size: 18px; margin-top: 4px; min-height: 22px; }
+
+    .vote-card-voters {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 2px;
+      margin-top: 6px;
+      min-height: 20px;
+    }
+
+    .voter-emoji {
+      font-size: 14px;
+      animation: popIn 0.2s ease;
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0); opacity: 0; }
+      to   { transform: scale(1); opacity: 1; }
+    }
 
     .vote-confirm-btn {
       background: linear-gradient(135deg, #7a1228, #a01a35);
@@ -541,7 +559,6 @@
 
     .next-btn:hover { transform: scale(1.05); }
 
-    /* 🏆 ÉCRAN FIN DE PARTIE */
     .gameover-overlay {
       position: fixed;
       inset: 0;
@@ -573,17 +590,8 @@
       width: 90%;
     }
 
-    .gameover-title {
-      font-size: 48px;
-      font-weight: 800;
-      margin-bottom: 8px;
-    }
-
-    .gameover-subtitle {
-      font-size: 16px;
-      color: rgba(255,255,255,0.4);
-      margin-bottom: 30px;
-    }
+    .gameover-title { font-size: 48px; font-weight: 800; margin-bottom: 8px; }
+    .gameover-subtitle { font-size: 16px; color: rgba(255,255,255,0.4); margin-bottom: 30px; }
 
     .podium-zone {
       display: flex;
@@ -593,51 +601,21 @@
       margin: 24px 0;
     }
 
-    .podium-card {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-    }
-
+    .podium-card { display: flex; flex-direction: column; align-items: center; gap: 6px; }
     .podium-card.first .podium-emoji { font-size: 56px; }
     .podium-card.second .podium-emoji { font-size: 44px; }
     .podium-card.third .podium-emoji { font-size: 36px; }
-
     .podium-medal { font-size: 28px; }
     .podium-card.first .podium-medal { font-size: 36px; }
-
-    .podium-name {
-      font-size: 14px;
-      font-weight: 700;
-      color: rgba(255,255,255,0.8);
-    }
-
-    .podium-pts {
-      font-size: 22px;
-      font-weight: 800;
-      color: white;
-    }
-
+    .podium-name { font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.8); }
+    .podium-pts { font-size: 22px; font-weight: 800; color: white; }
     .podium-card.first .podium-pts { font-size: 28px; color: #ffd700; }
-
-    .podium-bar {
-      width: 70px;
-      border-radius: 8px 8px 0 0;
-      background: rgba(255,255,255,0.1);
-    }
-
+    .podium-bar { width: 70px; border-radius: 8px 8px 0 0; }
     .podium-card.first .podium-bar { height: 80px; background: rgba(255,215,0,0.3); border: 1px solid rgba(255,215,0,0.5); }
     .podium-card.second .podium-bar { height: 55px; background: rgba(192,192,192,0.2); border: 1px solid rgba(192,192,192,0.4); }
     .podium-card.third .podium-bar { height: 35px; background: rgba(205,127,50,0.2); border: 1px solid rgba(205,127,50,0.4); }
 
-    .others-zone {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin: 16px 0;
-    }
+    .others-zone { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 16px 0; }
 
     .replay-btn {
       background: linear-gradient(135deg, #7a1228, #a01a35);
@@ -670,7 +648,7 @@
     .new-round-label { font-size: 22px; font-weight: 700; color: rgba(255,255,255,0.5); letter-spacing: 2px; }
     .new-round-number { font-size: 120px; font-weight: 800; color: white; text-shadow: 0 0 40px rgba(30,86,253,0.8); animation: countPop 0.4s ease; }
 
-   .notif {
+    .notif {
       position: fixed;
       top: 20px;
       left: 50%;
