@@ -13,9 +13,9 @@
     <span class="arrow"></span>
   </div>
 
-  <!-- 🔥 Boutons droite : règles + paramètres -->
-  <div id="rulesBtn" title="Règles du jeu">📜</div>
+  <!-- 🔥 ⚙️ en haut, 📜 en dessous -->
   <div id="settingsBtn" style="display:none;" title="Paramètres">⚙️</div>
+  <div id="rulesBtn" title="Règles du jeu">📜</div>
 
   <div class="lobby-info">
     <div class="info-row">
@@ -54,7 +54,7 @@
 
   <!-- Panel règles -->
   <div id="rulesPanel" style="display:none;">
-    <div class="settings-box">
+    <div class="settings-box" style="width:340px;min-width:340px;">
       <button id="closeRules" style="
         position:absolute;top:12px;right:12px;
         background:rgba(255,255,255,0.08);
@@ -64,41 +64,41 @@
         display:flex;align-items:center;justify-content:center;
       ">✕</button>
 
-      <h2 style="font-size:16px;margin-bottom:14px;">🕵️ Les règles</h2>
+      <h2 style="font-size:20px;margin-bottom:16px;">🕵️ Les règles</h2>
 
-      <div style="text-align:left;color:white;font-size:12px;font-weight:600;line-height:1.6;max-height:70vh;overflow-y:auto;">
+      <div style="text-align:left;color:white;font-size:14px;font-weight:600;line-height:1.7;max-height:70vh;overflow-y:auto;padding-right:4px;">
 
-        <p style="color:rgba(255,255,255,0.5);margin-bottom:10px;font-size:11px;">
+        <p style="color:rgba(255,255,255,0.5);margin-bottom:14px;font-size:13px;">
           Un jeu de déduction et de bluff. Chaque round, un mot secret est distribué — mais pas le même pour tout le monde...
         </p>
 
-        <p style="color:#ffd700;margin:10px 0 4px;">🎭 Les rôles</p>
+        <p style="color:#ffd700;margin:14px 0 8px;font-size:17px;font-weight:800;">🎭 Les rôles</p>
 
-        <p style="margin-bottom:8px;">
-          🟦 <b>Civil</b> — Tu as le mot commun. Donne des indices sans trop en dire. Attention : tu ne sais pas si t'es Civil ou Undergooner !
+        <p style="margin-bottom:10px;font-size:14px;">
+          🟦 <b style="font-size:15px;">Civil</b> — Tu as le mot commun. Donne des indices sans trop en dire. Attention : tu ne sais pas si t'es Civil ou Undergooner !
         </p>
-        <p style="margin-bottom:8px;">
-          🔴 <b>Undergooner</b> — Tu as un mot légèrement différent. Bluff et fais croire que t'as le même mot. Toi non plus tu ne sais pas avec certitude que t'es l'Undergooner...
+        <p style="margin-bottom:10px;font-size:14px;">
+          🔴 <b style="font-size:15px;">Undergooner</b> — Tu as un mot légèrement différent. Bluff et fais croire que t'as le même mot. Toi non plus tu ne sais pas avec certitude que t'es l'Undergooner...
         </p>
-        <p style="margin-bottom:8px;">
-          ⬜ <b>Mr. White</b> — Tu n'as aucun mot. Tu sais que t'es Mr. White. Devine de quoi tout le monde parle. Si tu reçois des votes, tente de deviner le mot civil pour gratter des points !
+        <p style="margin-bottom:10px;font-size:14px;">
+          ⬜ <b style="font-size:15px;">Mr. White</b> — Tu n'as aucun mot. Tu sais que t'es Mr. White. Devine de quoi tout le monde parle. Si tu reçois des votes, tente de deviner le mot civil pour gratter des points !
         </p>
-        <p style="margin-bottom:12px;">
-          ⚫ <b>Mr. Black</b> — Tu ES un civil avec le mot civil. Mais tu peux espionner le mot d'un joueur une seule fois. Utilise ton pouvoir au bon moment !
+        <p style="margin-bottom:14px;font-size:14px;">
+          ⚫ <b style="font-size:15px;">Mr. Black</b> — Tu ES un civil avec le mot civil. Mais tu peux espionner le mot d'un joueur une seule fois. Utilise ton pouvoir au bon moment !
         </p>
 
-        <p style="color:#ffd700;margin:10px 0 4px;">🎮 Déroulement</p>
-        <p style="margin-bottom:4px;">1. Chacun reçoit son mot secret</p>
-        <p style="margin-bottom:4px;">2. À tour de rôle, chacun donne un mot indice</p>
-        <p style="margin-bottom:4px;">3. Tout le monde vote pour désigner l'Undergooner</p>
-        <p style="margin-bottom:4px;">4. Les points sont attribués</p>
-        <p style="margin-bottom:12px;">5. Le host lance le round suivant</p>
+        <p style="color:#ffd700;margin:14px 0 8px;font-size:17px;font-weight:800;">🎮 Déroulement</p>
+        <p style="margin-bottom:6px;">1. Chacun reçoit son mot secret</p>
+        <p style="margin-bottom:6px;">2. À tour de rôle, chacun donne un mot indice</p>
+        <p style="margin-bottom:6px;">3. Tout le monde vote pour désigner l'Undergooner</p>
+        <p style="margin-bottom:6px;">4. Les points sont attribués</p>
+        <p style="margin-bottom:14px;">5. Le host lance le round suivant</p>
 
-        <p style="color:#ffd700;margin:10px 0 4px;">🏆 Les points</p>
-        <p style="margin-bottom:4px;">✅ Tu votes pour l'Undergooner → <b>+1 pt</b></p>
-        <p style="margin-bottom:4px;">✅ Undergooner, personne ne vote contre toi → <b>+2 pts</b></p>
-        <p style="margin-bottom:4px;">✅ Undergooner, 1 seul vote contre toi → <b>+1 pt</b></p>
-        <p style="margin-bottom:4px;">✅ Mr. White devine le mot civil → <b>+1 ou +2 pts</b></p>
+        <p style="color:#ffd700;margin:14px 0 8px;font-size:17px;font-weight:800;">🏆 Les points</p>
+        <p style="margin-bottom:6px;">✅ Tu votes pour l'Undergooner → <b>+1 pt</b></p>
+        <p style="margin-bottom:6px;">✅ Undergooner, personne ne vote contre toi → <b>+2 pts</b></p>
+        <p style="margin-bottom:6px;">✅ Undergooner, 1 seul vote contre toi → <b>+1 pt</b></p>
+        <p style="margin-bottom:6px;">✅ Mr. White devine le mot civil → <b>+1 ou +2 pts</b></p>
         <p style="margin-bottom:4px;">❌ Tu rates ou ne joues pas → <b>-1 pt</b></p>
       </div>
     </div>
