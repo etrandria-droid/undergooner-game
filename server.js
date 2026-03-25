@@ -10,7 +10,8 @@ const io = new Server(server);
 app.use(express.static("public"));
 
 // 🔥 URLs propres — /[code] redirige vers lobby
-app.get("/:code([A-Z0-9]{5})", (req, res) => {
+app.get("/:code", (req, res) => {
+  if (!/^[A-Z0-9]{5}$/.test(req.params.code)) return res.status(404).send("Not found");
   res.sendFile(path.join(__dirname, "public", "lobby.html"));
 });
 
