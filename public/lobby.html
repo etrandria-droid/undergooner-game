@@ -9,12 +9,13 @@
 <div class="page-transition" id="pageTransition"></div>
 <div class="card">
 
-  <div class="back" onclick="location.href='index.html'">
+  <div class="back" onclick="location.href='/'">
     <span class="arrow"></span>
   </div>
 
-  <div style="position:absolute;top:16px;right:56px;" id="rulesBtn">📖</div>
-  <div id="settingsBtn" style="display:none;">⚙️</div>
+  <!-- 🔥 Boutons droite : règles + paramètres -->
+  <div id="rulesBtn" title="Règles du jeu">📜</div>
+  <div id="settingsBtn" style="display:none;" title="Paramètres">⚙️</div>
 
   <div class="lobby-info">
     <div class="info-row">
@@ -53,7 +54,7 @@
 
   <!-- Panel règles -->
   <div id="rulesPanel" style="display:none;">
-    <div class="settings-box" style="left:calc(50% - 220px - 280px); width:300px;">
+    <div class="settings-box">
       <button id="closeRules" style="
         position:absolute;top:12px;right:12px;
         background:rgba(255,255,255,0.08);
@@ -76,15 +77,12 @@
         <p style="margin-bottom:8px;">
           🟦 <b>Civil</b> — Tu as le mot commun. Donne des indices sans trop en dire. Attention : tu ne sais pas si t'es Civil ou Undergooner !
         </p>
-
         <p style="margin-bottom:8px;">
-          🔴 <b>Undergooner</b> — Tu as un mot légèrement différent. Bluff et fais croire que t'as le même mot que tout le monde. Toi non plus tu ne sais pas avec certitude que t'es l'Undergooner...
+          🔴 <b>Undergooner</b> — Tu as un mot légèrement différent. Bluff et fais croire que t'as le même mot. Toi non plus tu ne sais pas avec certitude que t'es l'Undergooner...
         </p>
-
         <p style="margin-bottom:8px;">
           ⬜ <b>Mr. White</b> — Tu n'as aucun mot. Tu sais que t'es Mr. White. Devine de quoi tout le monde parle. Si tu reçois des votes, tente de deviner le mot civil pour gratter des points !
         </p>
-
         <p style="margin-bottom:12px;">
           ⚫ <b>Mr. Black</b> — Tu ES un civil avec le mot civil. Mais tu peux espionner le mot d'un joueur une seule fois. Utilise ton pouvoir au bon moment !
         </p>
@@ -102,7 +100,6 @@
         <p style="margin-bottom:4px;">✅ Undergooner, 1 seul vote contre toi → <b>+1 pt</b></p>
         <p style="margin-bottom:4px;">✅ Mr. White devine le mot civil → <b>+1 ou +2 pts</b></p>
         <p style="margin-bottom:4px;">❌ Tu rates ou ne joues pas → <b>-1 pt</b></p>
-
       </div>
     </div>
   </div>
@@ -110,7 +107,6 @@
   <!-- Panel paramètres -->
   <div id="settingsPanel" style="display:none;">
     <div class="settings-box">
-
       <button id="closeSettings" style="
         position:absolute;top:12px;right:12px;
         background:rgba(255,255,255,0.08);
@@ -184,10 +180,11 @@
         display: none;
       ">⚠️ Nécessite 6 joueurs minimum</p>
 
-      <button id="saveSettings" class="btn blue" style="margin-top:16px;width:auto;padding:12px 30px;">
-        Sauvegarder
-      </button>
-
+      <div style="text-align:center;margin-top:16px;">
+        <button id="saveSettings" class="btn blue" style="width:auto;padding:12px 30px;">
+          Sauvegarder
+        </button>
+      </div>
     </div>
   </div>
 

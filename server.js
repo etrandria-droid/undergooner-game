@@ -1,12 +1,18 @@
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
+const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
 app.use(express.static("public"));
+
+// 🔥 URLs propres — /[code] redirige vers lobby
+app.get("/:code([A-Z0-9]{5})", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "lobby.html"));
+});
 
 const rooms = {};
 
@@ -48,17 +54,6 @@ const wordPairs = [
   { civil: "KEBAB", undercover: "HAMBURGER" },
   { civil: "SAUMON", undercover: "THON" },
   { civil: "CAMEMBERT", undercover: "BRIE" },
-  // 📱 Tech / Réseaux
-  { civil: "NETFLIX", undercover: "DISNEY+" },
-  { civil: "SPOTIFY", undercover: "DEEZER" },
-  { civil: "INSTAGRAM", undercover: "SNAPCHAT" },
-  { civil: "TIKTOK", undercover: "REELS" },
-  { civil: "TWITCH", undercover: "YOUTUBE" },
-  { civil: "WHATSAPP", undercover: "TELEGRAM" },
-  { civil: "IPHONE", undercover: "SAMSUNG" },
-  { civil: "PLAYSTATION", undercover: "XBOX" },
-  { civil: "CHATGPT", undercover: "GEMINI" },
-  { civil: "AMAZON", undercover: "ALIBABA" },
   // 🏙️ Villes
   { civil: "PARIS", undercover: "LYON" },
   { civil: "BARCELONE", undercover: "MADRID" },
@@ -79,6 +74,8 @@ const wordPairs = [
   { civil: "SURF", undercover: "WAKEBOARD" },
   { civil: "JUDO", undercover: "KARATÉ" },
   { civil: "NATATION", undercover: "WATER-POLO" },
+  { civil: "SAUT EN HAUTEUR", undercover: "SAUT EN LONGUEUR" },
+  { civil: "TROTTINETTE", undercover: "SKATEBOARD" },
   // 🎬 Séries / Films
   { civil: "BREAKING BAD", undercover: "NARCOS" },
   { civil: "GAME OF THRONES", undercover: "HOUSE OF THE DRAGON" },
@@ -95,8 +92,9 @@ const wordPairs = [
   { civil: "INCEPTION", undercover: "TENET" },
   { civil: "LE PARRAIN", undercover: "SCARFACE" },
   { civil: "HARRY POTTER", undercover: "HERMIONE GRANGER" },
+  { civil: "LE LABYRINTHE", undercover: "HUNGER GAMES" },
   // 🎵 Musique
-  { civil: "BOOBA", undercover: "KAARIS" },
+  { civil: "MISTER V", undercover: "MASTU" },
   { civil: "DRAKE", undercover: "KENDRICK LAMAR" },
   { civil: "BEYONCÉ", undercover: "RIHANNA" },
   { civil: "TAYLOR SWIFT", undercover: "ARIANA GRANDE" },
@@ -104,7 +102,7 @@ const wordPairs = [
   { civil: "COLDPLAY", undercover: "MAROON 5" },
   { civil: "NIRVANA", undercover: "ARCTIC MONKEYS" },
   { civil: "METALLICA", undercover: "AC/DC" },
-  { civil: "EMINEM", undercover: "JAY-Z" },
+  { civil: "AMIXEM", undercover: "JOYCA" },
   { civil: "ANGÈLE", undercover: "STROMAE" },
   { civil: "PNL", undercover: "NEKFEU" },
   { civil: "SCH", undercover: "NINHO" },
@@ -118,33 +116,36 @@ const wordPairs = [
   { civil: "WONDER WOMAN", undercover: "BLACK WIDOW" },
   { civil: "DEADPOOL", undercover: "WOLVERINE" },
   { civil: "LE JOKER", undercover: "BOUFFON VERT" },
-  { civil: "LE SOLDAT DE L'HIVER", undercover: "CAPTAIN AMERICA" },
-  { civil: "VENOM", undercover: "CARNAGE" },
+  { civil: "X-MEN", undercover: "4 FANTASTIQUES" },
+  { civil: "JUSTICE LEAGUE", undercover: "GARDIENS DE LA GALAXIE" },
   { civil: "DOCTEUR STRANGE", undercover: "LOKI" },
+  { civil: "INFINITY WAR", undercover: "ENDGAME" },
+  { civil: "KING ANDERSON", undercover: "PRODIGY6464" },
   // 🌍 Nature
   { civil: "SOLEIL", undercover: "LUNE" },
   { civil: "ORAGE", undercover: "TEMPÊTE" },
-  { civil: "VOLCAN", undercover: "GEYSER" },
+  { civil: "VOLCAN", undercover: "MONTAGNE" },
   { civil: "FLEUVE", undercover: "RIVIÈRE" },
   { civil: "OCÉAN", undercover: "MER" },
-  { civil: "DÉSERT", undercover: "STEPPE" },
-  { civil: "JUNGLE", undercover: "FORÊT TROPICALE" },
-  { civil: "GLACIER", undercover: "BANQUISE" },
+  { civil: "FORÊT", undercover: "JUNGLE" },
+  { civil: "BUISSON", undercover: "ARBRE" },
+  { civil: "HIVER", undercover: "AUTOMNE" },
   { civil: "ÉCLAIR", undercover: "TONNERRE" },
-  { civil: "TREMBLEMENT DE TERRE", undercover: "TSUNAMI" },
-  { civil: "COMÈTE", undercover: "MÉTÉORITE" },
+  { civil: "SÉISME", undercover: "TSUNAMI" },
+  { civil: "CRÉPUSCULE", undercover: "AUBE" },
   { civil: "ARC-EN-CIEL", undercover: "AURORE BORÉALE" },
   // 🎭 Célébrités
   { civil: "CRISTIANO RONALDO", undercover: "NEYMAR" },
   { civil: "MESSI", undercover: "MBAPPÉ" },
-  { civil: "LEBRON JAMES", undercover: "KEVIN DURANT" },
+  { civil: "HELYDIA", undercover: "ELSA BOIS" },
+  { civil: "LEBRON JAMES", undercover: "MICHAEL JORDAN" },
   { civil: "ELON MUSK", undercover: "MARK ZUCKERBERG" },
-  { civil: "OBAMA", undercover: "CLINTON" },
+  { civil: "BARACK OBAMA", undercover: "DONALD TRUMP" },
   { civil: "MACRON", undercover: "SARKOZY" },
   { civil: "EINSTEIN", undercover: "NEWTON" },
   { civil: "NAPOLÉON", undercover: "CÉSAR" },
   { civil: "CLÉOPÂTRE", undercover: "NÉFERTITI" },
-  { civil: "PICASSO", undercover: "DALÍ" },
+  { civil: "PICASSO", undercover: "VAN GOGH" },
   { civil: "MACRON", undercover: "MÉLENCHON" },
   { civil: "JOHNNY DEPP", undercover: "BRAD PITT" },
   { civil: "LEONARDO DICAPRIO", undercover: "TOM HANKS" },
@@ -156,17 +157,39 @@ const wordPairs = [
   { civil: "CAFETIÈRE", undercover: "BOUILLOIRE" },
   { civil: "FRIGO", undercover: "CONGÉLATEUR" },
   { civil: "ASPIRATEUR", undercover: "BALAI" },
+  // 🎲 Divers
+  { civil: "NETFLIX", undercover: "DISNEY+" },
+  { civil: "SPOTIFY", undercover: "DEEZER" },
+  { civil: "INSTAGRAM", undercover: "SNAPCHAT" },
+  { civil: "TIKTOK", undercover: "REELS" },
+  { civil: "TWITCH", undercover: "YOUTUBE" },
+  { civil: "WHATSAPP", undercover: "TELEGRAM" },
+  { civil: "IPHONE", undercover: "SAMSUNG" },
+  { civil: "PLAYSTATION", undercover: "XBOX" },
+  { civil: "CHATGPT", undercover: "GEMINI" },
+  { civil: "AMAZON", undercover: "ALIBABA" },
+  { civil: "NIKE", undercover: "ASICS" },
+  { civil: "COCA COLA", undercover: "PEPSI" },
+  { civil: "OREO", undercover: "GRANOLA" },
+  { civil: "CLAVIER", undercover: "PIANO" },
+  { civil: "TATOUAGE", undercover: "CICATRICE" },
+  { civil: "BOUTEILLE", undercover: "GOURDE" },
+  { civil: "PARAPLUIE", undercover: "PARASOL" },
+  { civil: "CHIPS", undercover: "POP-CORN" },
+  { civil: "CINÉMA", undercover: "THÉÂTRE" },
+  { civil: "TUNNEL", undercover: "PONT" },
+  { civil: "WIFI", undercover: "BLUETOOTH" },
   // 🚗 Transport
   { civil: "MÉTRO", undercover: "RER" },
   { civil: "AVION", undercover: "HÉLICOPTÈRE" },
-  { civil: "BATEAU", undercover: "FERRY" },
+  { civil: "BATEAU", undercover: "RADEAU" },
   { civil: "MOTO", undercover: "SCOOTER" },
   { civil: "TAXI", undercover: "VTC" },
   // 😈 Vicieux
   { civil: "CAUCHEMAR", undercover: "HALLUCINATION" },
   { civil: "JUMEAU", undercover: "CLONE" },
   { civil: "SOSIE", undercover: "IMPOSTEUR" },
-  { civil: "LABYRINTHE", undercover: "PIÈGE" },
+  { civil: "SURPRISE", undercover: "PIÈGE" },
   { civil: "TRAHISON", undercover: "COMPLOT" },
   { civil: "ÉPIDÉMIE", undercover: "PANDÉMIE" },
   { civil: "RÉVOLUTION", undercover: "SOUMISSION" },
@@ -177,6 +200,7 @@ const wordPairs = [
   { civil: "COURAGE", undercover: "LÂCHETÉ" },
   { civil: "NAUFRAGE", undercover: "NOYADE" },
   { civil: "MIRAGE", undercover: "ILLUSION D'OPTIQUE" },
+  { civil: "ÉPÉE", undercover: "KATANA" },
   // 🎮 Jeux vidéo
   { civil: "MARIO", undercover: "SONIC" },
   { civil: "POKEMON", undercover: "YU-GI-OH" },
@@ -184,20 +208,28 @@ const wordPairs = [
   { civil: "CALL OF DUTY", undercover: "BATTLEFIELD" },
   { civil: "GTA", undercover: "RED DEAD REDEMPTION" },
   { civil: "MINECRAFT", undercover: "ROBLOX" },
-  { civil: "LEAGUE OF LEGENDS", undercover: "VALORANT" },
+  { civil: "LEAGUE OF LEGENDS", undercover: "DOTA 2" },
   { civil: "FIFA", undercover: "NBA 2K" },
-  { civil: "THE LAST OF US", undercover: "RESIDENT EVIL" },
-  { civil: "ASSASSIN'S CREED", undercover: "SPIDER-MAN" },
-  { civil: "ZELDA", undercover: "ELDEN RING" },
   { civil: "AMONG US", undercover: "LOUP-GAROU" },
-  { civil: "OVERWATCH", undercover: "FORTNITE" },
+  { civil: "ASSASSIN'S CREED", undercover: "PRINCE OF PERSIA" },
+  { civil: "ZELDA", undercover: "ELDEN RING" },
+  { civil: "OVERWATCH", undercover: "VALORANT" },
   { civil: "ANIMAL CROSSING", undercover: "LES SIMS" },
-  { civil: "PUBG", undercover: "CALL OF DUTY" },
-  { civil: "DARK SOULS", undercover: "SEKIRO" },
-  { civil: "CRASH BANDICOOT", undercover: "RAYMAN" },
+  { civil: "PUBG", undercover: "WARZONE" },
+  { civil: "DARK SOULS", undercover: "SKYRIM" },
   { civil: "MORTAL KOMBAT", undercover: "STREET FIGHTER" },
-  { civil: "GRAND THEFT AUTO", undercover: "WATCH DOGS" },
-  { civil: "CYBERPUNK 2077", undercover: "NO MAN'S SKY" },
+  { civil: "VALORANT", undercover: "COUNTER-STRIKE" },
+  // 🏥 Anatomie
+  { civil: "CLAVICULE", undercover: "OMOPLATE" },
+  { civil: "ESTOMAC", undercover: "FOIE" },
+  { civil: "CHEVILLE", undercover: "GENOU" },
+  { civil: "VIRUS", undercover: "CANCER" },
+  { civil: "UTÉRUS", undercover: "CÔLON" },
+  { civil: "MIGRAINE", undercover: "FIÈVRE" },
+  { civil: "MYOPE", undercover: "AVEUGLE" },
+  { civil: "ALLERGIE", undercover: "ADDICTION" },
+  { civil: "AVC", undercover: "INFARCTUS" },
+  { civil: "PARKINSON", undercover: "ALZHEIMER" },
 ];
 
 io.on("connection", (socket) => {
@@ -253,7 +285,6 @@ io.on("connection", (socket) => {
     if (!room) { socket.emit("roomNotFound"); return; }
     if (room.started) { socket.emit("gameAlreadyStarted"); return; }
 
-    // 🔥 Pseudo en doublon
     const already = room.players.find(p => p.name.toLowerCase() === playerName.toLowerCase());
     if (already) {
       if (already.id === socket.id) {
@@ -295,6 +326,34 @@ io.on("connection", (socket) => {
       player.id = socket.id;
       player.disconnected = false;
       socket.join(code);
+
+      // 🔥 Renvoyer l'état actuel du jeu au joueur qui rejoint
+      socket.emit("startCountdown", {
+        word: player.word,
+        role: player.role,
+        timer: room.settings.timer,
+        round: room.currentRound,
+        totalRounds: room.totalRounds,
+        wordsPerRound: room.wordsPerRound,
+        players: room.players.map(pl => ({
+          name: pl.name,
+          emoji: pl.emoji,
+          score: pl.score,
+        }))
+      });
+
+      // 🔥 Renvoyer les mots déjà joués
+      socket.emit("restoreGameState", {
+        words: room.words,
+        currentWordIndex: room.currentWordIndex,
+        wordsPerRound: room.wordsPerRound,
+        players: room.players.map(pl => ({
+          name: pl.name,
+          emoji: pl.emoji,
+          score: pl.score,
+        }))
+      });
+
       io.to(code).emit("playerReconnected", { playerName: player.name });
     }
   });
@@ -321,7 +380,6 @@ io.on("connection", (socket) => {
     const player = room.players.find(p => p.id === socket.id);
     if (!player) return;
     player.emoji = emoji;
-    localStorage_emoji = emoji;
     io.to(code).emit("updateLobby", room.players);
   });
 
@@ -413,6 +471,12 @@ io.on("connection", (socket) => {
     if (!room.votes) room.votes = {};
 
     room.votes[socket.id] = target;
+
+    // 🔥 Notifier que ce joueur a voté
+    const voter = room.players.find(p => p.id === socket.id);
+    if (voter) {
+      io.to(roomCode).emit("playerVoted", { playerName: voter.name });
+    }
 
     const activePlayers = room.players.filter(p => !p.disconnected);
     const totalVotes = Object.keys(room.votes).length;
@@ -509,10 +573,9 @@ function startRound(roomCode) {
   room.totalRounds = room.settings.totalRounds || 10;
   room.wordsPerRound = room.settings.wordsPerRound || 3;
 
-  // 🔥 Fix rotation : on utilise roundStartPlayerIndex correctement
   const activePlayers = room.players.filter(p => !p.disconnected);
   room.roundStartPlayerIndex = room.roundStartPlayerIndex % activePlayers.length;
-  room.currentPlayerIndex = room.roundStartPlayerIndex;
+  room.currentPlayerIndex = 0; // 🔥 Fix : on repart de 0 à chaque round
 
   room.players.forEach(p => {
     p.eliminated = false;
@@ -576,7 +639,6 @@ function startTurn(roomCode) {
   const activePlayers = room.players.filter(p => !p.disconnected);
   if (activePlayers.length === 0) return;
 
-  // 🔥 Fin du round → vote
   if (room.currentWordIndex >= room.wordsPerRound) {
     io.to(roomCode).emit("startVote", {
       players: room.players.map(p => ({
@@ -588,12 +650,9 @@ function startTurn(roomCode) {
     return;
   }
 
-  // 🔥 Fix : index basé sur activePlayers avec offset du round
-  const startOffset = room.roundStartPlayerIndex % activePlayers.length;
-  const totalTurnsThisWord = room.currentPlayerIndex - room.roundStartPlayerIndex;
-  const adjustedIndex = (startOffset + (room.currentPlayerIndex % activePlayers.length)) % activePlayers.length;
-
-  const player = activePlayers[adjustedIndex];
+  // 🔥 Fix rotation simple et fiable
+  const playerIndex = (room.roundStartPlayerIndex + room.currentPlayerIndex) % activePlayers.length;
+  const player = activePlayers[playerIndex];
   if (!player) return;
 
   io.to(roomCode).emit("newTurn", {
@@ -625,6 +684,7 @@ function startTurn(roomCode) {
   }, room.settings.timer * 1000);
 }
 
+
 function advanceTurn(roomCode) {
   const room = rooms[roomCode];
   if (!room) return;
@@ -634,10 +694,8 @@ function advanceTurn(roomCode) {
 
   room.currentPlayerIndex++;
 
-  // 🔥 Quand tout le monde a joué pour ce mot → mot suivant
-  const turnsThisWord = room.currentPlayerIndex - (room.currentWordIndex * activePlayers.length) - room.roundStartPlayerIndex % activePlayers.length;
-
-  if (turnsThisWord >= activePlayers.length) {
+  // 🔥 Fix : quand tout le monde a joué → mot suivant
+  if (room.currentPlayerIndex % activePlayers.length === 0) {
     room.currentWordIndex++;
   }
 
@@ -686,12 +744,16 @@ function resolveVote(roomCode) {
     undercover.score += Math.min(notVotedAgainst, 2);
   }
 
+  // 🔥 Stocker les rôles pour le récap
+  const rolesMap = {};
+  room.players.forEach(p => { rolesMap[p.name] = p.role; });
+
   room.votesSnapshot = { ...count };
   room.votes = {};
 
   if (mrWhitePlayer && whoVotedMrWhite.length > 0) {
     room.pendingReveal = {
-      civilWord, undercoverWord, undercoverName, unanimous, voteMap,
+      civilWord, undercoverWord, undercoverName, unanimous, voteMap, rolesMap,
       whoVotedMrWhite,
       votesAgainstMrWhite: whoVotedMrWhite.length,
       mrWhiteVotedForUndercover: voteMap[mrWhitePlayer.name] === undercoverName,
@@ -716,7 +778,7 @@ function resolveVote(roomCode) {
 
   io.to(roomCode).emit("voteResult", {
     wasUndercover: false, wasMrWhite: false,
-    civilWord, undercoverWord, undercoverName, unanimous, voteMap,
+    civilWord, undercoverWord, undercoverName, unanimous, voteMap, rolesMap,
     scores: room.players.map(p => ({ name: p.name, emoji: p.emoji, score: p.score })),
     mrWhiteGuessCorrect: null, mrWhiteGuess: null,
   });
@@ -730,7 +792,8 @@ function revealResult(roomCode) {
     wasUndercover: r.wasUndercover, wasMrWhite: r.wasMrWhite,
     civilWord: r.civilWord, undercoverWord: r.undercoverWord,
     undercoverName: r.undercoverName, unanimous: r.unanimous,
-    voteMap: r.voteMap || {}, scores: r.scores,
+    voteMap: r.voteMap || {}, rolesMap: r.rolesMap || {},
+    scores: r.scores,
     mrWhiteGuessCorrect: r.mrWhiteGuessCorrect, mrWhiteGuess: r.mrWhiteGuess,
   });
   room.pendingReveal = null;
