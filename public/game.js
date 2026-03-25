@@ -15,6 +15,7 @@ let totalRoundsConfig = totalRoundsStored;
 let currentRound = roundStored;
 let isHost = false;
 let mrWhiteTimerInterval = null;
+let myEmoji = localStorage.getItem("emoji") || "👽";
 
 const storedPlayers = JSON.parse(localStorage.getItem("players") || "[]");
 isHost = storedPlayers[0]?.name === name;
@@ -32,6 +33,10 @@ const countdownRoundLabel = document.getElementById("countdownRoundLabel");
 
 countdownRoundLabel.innerText = "ROUND " + currentRound + " / " + totalRoundsConfig;
 document.getElementById("roundLabel").innerText = "ROUND " + currentRound + " / " + totalRoundsConfig;
+
+// 🔥 Emoji du joueur en haut à gauche
+const playerEmojiDisplay = document.getElementById("playerEmojiDisplay");
+if (playerEmojiDisplay) playerEmojiDisplay.innerText = myEmoji;
 
 const interval = setInterval(() => {
   countdownEl.innerText = steps[i];
@@ -100,10 +105,11 @@ function buildTable(playersList, wordsCount) {
     }
 
     col.innerHTML = `
-      <div class="player-header">
-        <div class="player-avatar">${p.emoji}</div>
+      <div class="player-header" id="header-${p.name}">
+        <div class="player-avatar" id="avatar-${p.name}">${p.emoji}</div>
         <div class="player-name">${p.name}</div>
         <div class="player-score" id="score-${p.name}">${p.score || 0} pt</div>
+        <div class="vote-result-zone" id="voteresult-${p.name}"></div>
       </div>
       <div class="player-words">${cellsHtml}</div>
     `;
@@ -118,9 +124,22 @@ socket.on("newTurn", ({ playerName, wordIndex, wordsPerRound, timer }) => {
   document.getElementById("inputZone").style.display = "flex";
   document.getElementById("inputZone").classList.remove("urgent");
 
-  document.querySelectorAll(".player-col").forEach(c => c.classList.remove("active"));
+  // 🔥 Reset vote result zones
+  document.querySelectorAll(".vote-result-zone").forEach(z => z.innerHTML = "");
+
+  // 🔥 Surbrillance uniquement pour le joueur actif — et effet zoom/float uniquement si c'est notre tour
+  document.querySelectorAll(".player-col").forEach(c => {
+    c.classList.remove("active", "active-other");
+  });
+
   const activeCol = document.getElementById("col-" + playerName);
-  if (activeCol) activeCol.classList.add("active");
+  if (activeCol) {
+    if (playerName === name) {
+      activeCol.classList.add("active"); // plein effet pour moi
+    } else {
+      activeCol.classList.add("active-other"); // juste la flèche pour les autres
+    }
+  }
 
   const turnInfo = document.getElementById("turnInfo");
   if (playerName === name) {
@@ -184,7 +203,6 @@ socket.on("playerReconnected", ({ playerName }) => {
 });
 
 
-// 🔥 Restaurer l'état du jeu après reconnexion
 socket.on("restoreGameState", ({ words, currentWordIndex, wordsPerRound, players: statePlayers }) => {
   Object.entries(words).forEach(([wordIdx, playerWords]) => {
     Object.entries(playerWords).forEach(([playerName, word]) => {
@@ -268,7 +286,7 @@ document.getElementById("wordInput").addEventListener("keydown", (e) => {
 
 socket.on("startVote", ({ players: alivePlayers }) => {
   document.getElementById("inputZone").style.display = "none";
-  document.querySelectorAll(".player-col").forEach(c => c.classList.remove("active"));
+  document.querySelectorAll(".player-col").forEach(c => c.classList.remove("active", "active-other"));
   stopClientTimer();
 
   const voteScreen = document.getElementById("voteScreen");
@@ -282,6 +300,7 @@ socket.on("startVote", ({ players: alivePlayers }) => {
   window._votePlayers = alivePlayers;
   window._votedList = [];
 
+  // 🔥 Ajouter soi-même dans la liste voted dès qu'on a voté
   alivePlayers.forEach(p => {
     if (p.name === name) return;
 
@@ -332,13 +351,13 @@ function updateVoteWaiting(allPlayers) {
         display:flex;align-items:center;gap:4px;
         background:${hasVoted ? "rgba(77,255,145,0.12)" : "rgba(255,255,255,0.06)"};
         border:1px solid ${hasVoted ? "rgba(77,255,145,0.4)" : "rgba(255,255,255,0.1)"};
-        border-radius:10px;padding:4px 10px;
+        border-radius:10px;padding:6px 12px;
         font-size:13px;font-weight:700;color:white;
         transition:all 0.3s;
       ">
         <span>${p.emoji}</span>
         <span>${p.name}</span>
-        <span>${hasVoted ? "✅" : "⏳"}</span>
+        <span style="font-size:16px;">${hasVoted ? "✅" : "⏳"}</span>
       </div>
     `;
   });
@@ -423,19 +442,28 @@ socket.on("mrWhiteGuessPhase", ({ playerName, timer }) => {
 });
 
 
-socket.on("voteResult", ({ wasUndercover, wasMrWhite, civilWord, undercoverWord, undercoverName, unanimous, scores, voteMap, rolesMap, mrWhiteGuessCorrect, mrWhiteGuess }) => {
+socket.on("voteResult", ({ wasUndercover, wasMrWhite, civilWord, undercoverWord, undercoverName, unanimous, scores, voteMap, rolesMap, prevScores, mrWhiteGuessCorrect, mrWhiteGuess }) => {
 
-  // 🔥 Révéler les votes sur les cartes
+  // 🔥 Afficher les votes sur les colonnes du tableau principal (persistent)
   if (voteMap) {
     const allPlayers = JSON.parse(localStorage.getItem("players") || "[]");
     Object.entries(voteMap).forEach(([voter, target]) => {
       const voterPlayer = allPlayers.find(p => p.name === voter);
+      // Sur les cartes de vote
       const targetCard = document.getElementById("voters-" + target);
       if (targetCard && voterPlayer) {
         const span = document.createElement("span");
         span.className = "voter-emoji";
         span.innerText = voterPlayer.emoji;
         targetCard.appendChild(span);
+      }
+      // 🔥 Sur les colonnes du tableau principal
+      const voteResultZone = document.getElementById("voteresult-" + target);
+      if (voteResultZone && voterPlayer) {
+        const span = document.createElement("span");
+        span.style.cssText = "font-size:14px;animation:popIn 0.2s ease;";
+        span.innerText = voterPlayer.emoji;
+        voteResultZone.appendChild(span);
       }
     });
   }
@@ -495,11 +523,11 @@ socket.on("voteResult", ({ wasUndercover, wasMrWhite, civilWord, undercoverWord,
       } else if (unanimous) {
         resultIcon = "❌";
         resultText = "Tu étais l'Undergooner !<br><span style='font-size:18px;color:rgba(255,255,255,0.6);'>Tout le monde t'a démasqué(e) !</span>";
-        subText = "0 point ce round.";
+        subText = ""; // 🔥 Supprimé "0 point ce round"
       } else {
         resultIcon = "❌";
         resultText = `Tu étais l'Undergooner !<br><span style='font-size:18px;color:rgba(255,255,255,0.6);'>Démasqué(e) par <b style='color:white;'>${whoVotedAgainstMe.join(", ")}</b>.</span>`;
-        subText = whoVotedAgainstMe.length === 1 ? "+1 pt pour toi !" : "0 point ce round.";
+        subText = whoVotedAgainstMe.length === 1 ? "+1 pt pour toi !" : "";
       }
 
     } else if (iVotedForUndercover) {
@@ -527,7 +555,7 @@ socket.on("voteResult", ({ wasUndercover, wasMrWhite, civilWord, undercoverWord,
     let html = `
       <div class="result-icon">${resultIcon}</div>
       <div class="result-main-text">${resultText}</div>
-      <p style="color:rgba(255,255,255,0.65);font-size:16px;font-weight:600;margin:6px 0 10px;">${subText}</p>
+      ${subText ? `<p style="color:rgba(255,255,255,0.65);font-size:16px;font-weight:600;margin:6px 0 10px;">${subText}</p>` : ""}
       <div class="result-words">
         <span class="civil-word">🟢 Mot civil : <b>${civilWord}</b></span>
         <span class="undercover-word">🔴 Mot Undergooner : <b>${undercoverWord}</b></span>
@@ -540,14 +568,11 @@ socket.on("voteResult", ({ wasUndercover, wasMrWhite, civilWord, undercoverWord,
       </p>`;
     }
 
-    // 🔥 Récap scores avec rôles + votes + points gagnés ce round
-    const prevScores = {};
-    const allPlayers = JSON.parse(localStorage.getItem("players") || "[]");
-    allPlayers.forEach(p => { prevScores[p.name] = p.score || 0; });
-
+    // 🔥 Récap scores avec rôles + votes + points gagnés — utilise prevScores du serveur
     html += `<div class="scores-zone">`;
     scores.forEach(p => {
-      const gained = p.score - (prevScores[p.name] || 0);
+      const prev = prevScores ? (prevScores[p.name] || 0) : 0;
+      const gained = p.score - prev;
       const role = rolesMap ? rolesMap[p.name] : null;
       const roleEmoji = role === "undercover" ? "🔴" : role === "mrwhite" ? "⬜" : role === "mrblack" ? "⚫" : "🟦";
       const votedFor = voteMap ? voteMap[p.name] : null;
@@ -556,24 +581,25 @@ socket.on("voteResult", ({ wasUndercover, wasMrWhite, civilWord, undercoverWord,
         <div class="score-card">
           <div class="score-card-emoji">${p.emoji}</div>
           <div class="score-card-name">${p.name} ${roleEmoji}</div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.35);margin:2px 0;">${votedFor ? "→ " + votedFor : ""}</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.35);margin:2px 0;">${votedFor ? "→ " + votedFor : "— n'a pas voté"}</div>
           <div class="score-card-pts">${p.score} pts</div>
-          <div style="font-size:11px;font-weight:700;color:${gained > 0 ? "#4dff91" : gained < 0 ? "#ff4b5c" : "rgba(255,255,255,0.3)"};">
-            ${gained > 0 ? "+" + gained : gained < 0 ? gained : "="}
+          <div style="font-size:12px;font-weight:800;color:${gained > 0 ? "#4dff91" : gained < 0 ? "#ff4b5c" : "rgba(255,255,255,0.3)"};">
+            ${gained > 0 ? "+" + gained + " pt" : gained < 0 ? gained + " pt" : "="}
           </div>
         </div>
       `;
     });
     html += `</div>`;
 
-    // 🔥 Mettre à jour scores dans le tableau
     scores.forEach(p => {
       const scoreEl = document.getElementById("score-" + p.name);
       if (scoreEl) scoreEl.innerText = p.score + " pt" + (Math.abs(p.score) > 1 ? "s" : "");
     });
 
+    // 🔥 Bouton "Résultat" au dernier round, "Suivant" sinon
+    const isLastRound = currentRound >= totalRoundsConfig;
     if (isHost) {
-      html += `<button class="next-btn" id="nextRoundBtn">Suivant →</button>`;
+      html += `<button class="next-btn" id="nextRoundBtn">${isLastRound ? "Résultat 🏆" : "Suivant →"}</button>`;
     } else {
       html += `<p style="color:rgba(255,255,255,0.35);font-size:12px;margin-top:10px;">⏳ En attente du host...</p>`;
     }
@@ -598,12 +624,15 @@ socket.on("newRoundCountdown", ({ round }) => {
     c.innerText = "·";
   });
 
+  // 🔥 Reset vote result zones
+  document.querySelectorAll(".vote-result-zone").forEach(z => z.innerHTML = "");
+
   document.getElementById("voteScreen").style.display = "none";
   document.getElementById("mrWhiteGuessScreen").style.display = "none";
   document.getElementById("resultZone").innerHTML = "";
   document.getElementById("inputZone").style.display = "none";
   document.querySelectorAll(".player-col").forEach(c => {
-    c.classList.remove("active", "disconnected");
+    c.classList.remove("active", "active-other", "disconnected");
   });
 
   const overlay = document.createElement("div");
@@ -669,10 +698,12 @@ socket.on("gameOver", ({ scores }) => {
 
   podiumOrder.forEach((idx, pos) => {
     if (sorted[idx]) {
+      // 🔥 Animation float sur le gagnant (index 0 = 1er)
+      const isWinner = podiumClasses[pos] === "first";
       html += `
         <div class="podium-card ${podiumClasses[pos]}">
           <div class="podium-medal">${medals[pos]}</div>
-          <div class="podium-emoji">${sorted[idx].emoji}</div>
+          <div class="podium-emoji${isWinner ? " podium-emoji-winner" : ""}">${sorted[idx].emoji}</div>
           <div class="podium-name">${sorted[idx].name}</div>
           <div class="podium-pts">${sorted[idx].score} pts</div>
           <div class="podium-bar"></div>

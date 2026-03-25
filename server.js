@@ -462,28 +462,34 @@ io.on("connection", (socket) => {
     advanceTurn(roomCode);
   });
 
-  socket.on("vote", ({ target }) => {
-    const roomCode = Object.keys(rooms).find(code =>
-      rooms[code].players.find(p => p.id === socket.id)
-    );
-    if (!roomCode) return;
-    const room = rooms[roomCode];
-    if (!room.votes) room.votes = {};
+socket.on("vote", ({ target }) => {
+  const roomCode = Object.keys(rooms).find(code =>
+    rooms[code].players.find(p => p.id === socket.id)
+  );
+  if (!roomCode) return;
+  const room = rooms[roomCode];
+  if (!room.votes) room.votes = {};
 
-    room.votes[socket.id] = target;
+  room.votes[socket.id] = target;
 
-    // 🔥 Notifier que ce joueur a voté
-    const voter = room.players.find(p => p.id === socket.id);
-    if (voter) {
-      io.to(roomCode).emit("playerVoted", { playerName: voter.name });
-    }
+  const voter = room.players.find(p => p.id === socket.id);
+  if (voter) {
+    io.to(roomCode).emit("playerVoted", { playerName: voter.name });
+  }
 
-    const activePlayers = room.players.filter(p => !p.disconnected);
-    const totalVotes = Object.keys(room.votes).length;
-    if (totalVotes < activePlayers.length) return;
+  // 🔥 Fix : ne compter que les joueurs connectés ET présents dans la room
+  const activePlayers = room.players.filter(p => !p.disconnected);
+  const totalVotes = Object.keys(room.votes).length;
+  
+  // 🔥 Fix : vérifier aussi que tous les voters actifs ont voté
+  const activeVoters = activePlayers.filter(p => 
+    Object.keys(room.votes).includes(p.id)
+  );
+  
+  if (activeVoters.length < activePlayers.length) return;
 
-    resolveVote(roomCode);
-  });
+  resolveVote(roomCode);
+});
 
   socket.on("mrWhiteGuess", ({ guess, code }) => {
     const room = rooms[code];
@@ -706,6 +712,10 @@ function advanceTurn(roomCode) {
 function resolveVote(roomCode) {
   const room = rooms[roomCode];
 
+  // 🔥 Sauvegarder les scores AVANT attribution pour le récap
+  const prevScores = {};
+  room.players.forEach(p => { prevScores[p.name] = p.score; });
+
   const count = {};
   Object.values(room.votes).forEach(name => {
     count[name] = (count[name] || 0) + 1;
@@ -744,7 +754,6 @@ function resolveVote(roomCode) {
     undercover.score += Math.min(notVotedAgainst, 2);
   }
 
-  // 🔥 Stocker les rôles pour le récap
   const rolesMap = {};
   room.players.forEach(p => { rolesMap[p.name] = p.role; });
 
@@ -754,6 +763,7 @@ function resolveVote(roomCode) {
   if (mrWhitePlayer && whoVotedMrWhite.length > 0) {
     room.pendingReveal = {
       civilWord, undercoverWord, undercoverName, unanimous, voteMap, rolesMap,
+      prevScores,
       whoVotedMrWhite,
       votesAgainstMrWhite: whoVotedMrWhite.length,
       mrWhiteVotedForUndercover: voteMap[mrWhitePlayer.name] === undercoverName,
@@ -779,6 +789,7 @@ function resolveVote(roomCode) {
   io.to(roomCode).emit("voteResult", {
     wasUndercover: false, wasMrWhite: false,
     civilWord, undercoverWord, undercoverName, unanimous, voteMap, rolesMap,
+    prevScores,
     scores: room.players.map(p => ({ name: p.name, emoji: p.emoji, score: p.score })),
     mrWhiteGuessCorrect: null, mrWhiteGuess: null,
   });
@@ -793,6 +804,7 @@ function revealResult(roomCode) {
     civilWord: r.civilWord, undercoverWord: r.undercoverWord,
     undercoverName: r.undercoverName, unanimous: r.unanimous,
     voteMap: r.voteMap || {}, rolesMap: r.rolesMap || {},
+    prevScores: r.prevScores || {},
     scores: r.scores,
     mrWhiteGuessCorrect: r.mrWhiteGuessCorrect, mrWhiteGuess: r.mrWhiteGuess,
   });

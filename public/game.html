@@ -83,6 +83,25 @@
       gap: 16px;
     }
 
+    /* 🔥 Emoji joueur en haut à gauche */
+    .player-self-display {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      grid-column: 1;
+    }
+
+    .player-self-emoji {
+      font-size: 36px;
+      filter: drop-shadow(0 0 10px rgba(255,255,255,0.3));
+    }
+
+    .player-self-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.4);
+    }
+
     .word-display {
       background: linear-gradient(135deg, #0b1d3a, #142c54);
       border: 1px solid rgba(30,86,253,0.3);
@@ -238,13 +257,24 @@
       font-size: 12px;
       font-weight: 700;
       color: rgba(255,255,255,0.3);
-      margin-top: 6px;
-      padding-top: 6px;
+      margin-top: 4px;
+      padding-top: 4px;
       border-top: 1px solid rgba(255,255,255,0.08);
       width: 100%;
       text-align: center;
     }
 
+    /* 🔥 Zone votes sur le tableau */
+    .vote-result-zone {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1px;
+      min-height: 0;
+      margin-top: 2px;
+    }
+
+    /* 🔥 JOUEUR ACTIF (c'est MON tour) — plein effet */
     .player-col.active .player-header {
       background: rgba(255,215,0,0.08);
       border-bottom-color: rgba(255,215,0,0.3);
@@ -258,12 +288,19 @@
       font-size: 46px;
     }
 
-    @keyframes floatEmoji {
-      0%   { transform: translateY(0px) scale(1); }
-      50%  { transform: translateY(-8px) scale(1.1); }
-      100% { transform: translateY(0px) scale(1); }
+    /* 🔥 JOUEUR ACTIF (c'est le tour de quelqu'un d'autre) — juste la flèche */
+    .player-col.active-other .player-header::before {
+      content: '▼';
+      position: absolute;
+      top: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.5);
+      font-size: 12px;
+      animation: arrowBounce 0.8s ease-in-out infinite;
     }
 
+    /* 🔥 Flèche pour MON tour aussi */
     .player-col.active .player-header::before {
       content: '▼';
       position: absolute;
@@ -273,6 +310,12 @@
       color: #ffd700;
       font-size: 12px;
       animation: arrowBounce 0.8s ease-in-out infinite;
+    }
+
+    @keyframes floatEmoji {
+      0%   { transform: translateY(0px) scale(1); }
+      50%  { transform: translateY(-8px) scale(1.1); }
+      100% { transform: translateY(0px) scale(1); }
     }
 
     @keyframes arrowBounce {
@@ -396,11 +439,9 @@
     .vote-card:hover:not(.disabled) { border-color: rgba(220,42,75,0.5); background: rgba(220,42,75,0.06); transform: scale(1.05); }
     .vote-card.selected { border-color: #ff4b5c; background: rgba(220,42,75,0.12); box-shadow: 0 0 20px rgba(220,42,75,0.3); }
     .vote-card.disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
-    .vote-card.voted { border-color: rgba(77,255,145,0.5); }
 
     .vote-card-emoji { font-size: 34px; }
     .vote-card-name { font-size: 13px; font-weight: 700; color: white; margin-top: 6px; }
-    .vote-card-status { font-size: 18px; margin-top: 4px; min-height: 22px; }
 
     .vote-card-voters {
       display: flex;
@@ -536,7 +577,7 @@
       border-radius: 12px;
       padding: 8px 14px;
       text-align: center;
-      min-width: 75px;
+      min-width: 80px;
     }
 
     .score-card-emoji { font-size: 22px; }
@@ -605,6 +646,13 @@
     .podium-card.first .podium-emoji { font-size: 56px; }
     .podium-card.second .podium-emoji { font-size: 44px; }
     .podium-card.third .podium-emoji { font-size: 36px; }
+
+    /* 🔥 Animation float sur le gagnant */
+    .podium-emoji-winner {
+      animation: floatEmoji 1.2s ease-in-out infinite;
+      filter: drop-shadow(0 0 20px rgba(255,215,0,0.8));
+    }
+
     .podium-medal { font-size: 28px; }
     .podium-card.first .podium-medal { font-size: 36px; }
     .podium-name { font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.8); }
@@ -682,11 +730,17 @@
   <div class="game-wrapper" id="gameWrapper">
 
     <div class="top-bar">
-      <div></div>
+      <!-- 🔥 Emoji joueur en haut à gauche -->
+      <div class="player-self-display">
+        <span class="player-self-emoji" id="playerEmojiDisplay"></span>
+        <span class="player-self-name" id="playerNameDisplay"></span>
+      </div>
+
       <div class="word-display">
         <div class="word-label">Ton mot</div>
         <div class="word-value" id="wordDisplay"></div>
       </div>
+
       <div class="round-indicator">
         <div class="round-label" id="roundLabel">ROUND 1 / 10</div>
       </div>
@@ -714,7 +768,7 @@
       <p class="vote-title">🗳️ Qui est l'Undergooner ?</p>
       <div class="vote-grid" id="voteGrid"></div>
       <button class="vote-confirm-btn" id="voteConfirmBtn">Confirmer mon vote ✓</button>
-      <p class="vote-waiting" id="voteWaiting"></p>
+      <div class="vote-waiting" id="voteWaiting"></div>
     </div>
 
     <div class="mrwhite-guess-screen" id="mrWhiteGuessScreen">

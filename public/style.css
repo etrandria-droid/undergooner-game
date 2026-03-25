@@ -688,13 +688,5 @@ input:-webkit-autofill:active {
 
 .result-btn:hover { transform: scale(1.05); }
 
-/* 🔥 Clignotement zone saisie à 10s */
-@keyframes inputUrgent {
-  0%, 100% { border-color: rgba(220,42,75,0.8); box-shadow: 0 0 15px rgba(220,42,75,0.4); }
-  50%       { border-color: rgba(220,42,75,0.2); box-shadow: none; }
-}
 
-.input-zone.urgent {
-  animation: inputUrgent 0.8s ease-in-out infinite;
-  border-color: rgba(220,42,75,0.8);
-}
+
