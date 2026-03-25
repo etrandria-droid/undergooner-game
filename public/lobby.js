@@ -50,15 +50,15 @@ const settingsPanel = document.getElementById("settingsPanel");
 
 const btnStyle = `
   position:absolute;
-  font-size:20px;cursor:pointer;width:34px;height:34px;
+  font-size:18px;cursor:pointer;width:32px;height:32px;
   display:flex;align-items:center;justify-content:center;
   border-radius:10px;background:rgba(255,255,255,0.06);
   border:1px solid rgba(255,255,255,0.1);transition:all 0.3s;
 `;
 
-// 🔥 ⚙️ en haut, 📜 en dessous
+// 🔥 ⚙️ en haut, 📜 en dessous avec un peu plus d'espace
 settingsBtn.style.cssText = btnStyle + "top:16px;right:16px;";
-rulesBtn.style.cssText = btnStyle + "top:56px;right:16px;";
+rulesBtn.style.cssText = btnStyle + "top:58px;right:16px;";
 
 rulesBtn.onmouseenter = () => { rulesBtn.style.transform = "scale(1.15)"; rulesBtn.style.background = "rgba(255,255,255,0.12)"; };
 rulesBtn.onmouseleave = () => { rulesBtn.style.transform = "scale(1)"; rulesBtn.style.background = "rgba(255,255,255,0.06)"; };

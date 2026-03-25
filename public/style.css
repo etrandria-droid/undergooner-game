@@ -278,6 +278,7 @@ input:-webkit-autofill:active {
   background: rgba(255,255,255,0.04);
   border: 1px solid var(--border);
   border-radius: 12px;
+  max-width: calc(100% - 52px);
 }
 
 .label {
@@ -419,7 +420,7 @@ input:-webkit-autofill:active {
   border: 1px solid var(--border-blue);
   border-radius: 20px;
   padding: 30px;
-  width: 260px;
+  width: 320px;
   z-index: 20;
   text-align: center;
   box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 30px rgba(30,86,253,0.08);
