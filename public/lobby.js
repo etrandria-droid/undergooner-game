@@ -17,10 +17,10 @@ socket.on("connect", () => {
   socket.emit("joinRoom", { playerName: name, code, emoji: currentEmoji });
 });
 
+// 🔥 Copie uniquement le code
 document.getElementById("copyBtn").onclick = () => {
-  const url = window.location.origin + "/" + code;
-  navigator.clipboard.writeText(url);
-  showLobbyNotif("🔗 Lien copié !", "#4dff91");
+  navigator.clipboard.writeText(code);
+  showLobbyNotif("📋 Code copié !", "#4dff91");
 };
 
 const emojis = ["👽","🤖","🧙‍♂️","👩‍🚀","💩","👸","👺"];

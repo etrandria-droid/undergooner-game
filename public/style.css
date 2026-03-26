@@ -16,8 +16,8 @@
   --white-60:    rgba(255,255,255,0.6);
   --white-30:    rgba(255,255,255,0.3);
   --white-10:    rgba(255,255,255,0.08);
---border:      rgba(255,255,255,0.12);
---border-blue: rgba(30,86,253,0.45);
+  --border:      rgba(255,255,255,0.12);
+  --border-blue: rgba(30,86,253,0.45);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -33,7 +33,6 @@ body {
   position: relative;
 }
 
-/* 🔥 FOND AMBIANT */
 body::before {
   content: '';
   position: fixed;
@@ -46,7 +45,6 @@ body::before {
   z-index: 0;
 }
 
-/* 🔥 GRAIN TEXTURE */
 body::after {
   content: '';
   position: fixed;
@@ -267,6 +265,7 @@ input:-webkit-autofill:active {
 .lobby-info {
   width: 100%;
   margin-bottom: 16px;
+  padding-right: 48px; /* 🔥 espace pour les boutons droite */
 }
 
 .info-row {
@@ -278,7 +277,8 @@ input:-webkit-autofill:active {
   background: rgba(255,255,255,0.04);
   border: 1px solid var(--border);
   border-radius: 12px;
-  max-width: calc(100% - 52px);
+  width: 100%;
+  min-width: 0;
 }
 
 .label {
@@ -288,18 +288,26 @@ input:-webkit-autofill:active {
   letter-spacing: 1.5px;
   text-transform: uppercase;
   width: 60px;
+  flex-shrink: 0;
 }
 
 .value {
   font-size: 18px;
   font-weight: 800;
   color: white;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1;
 }
 
 .code-container {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
+  flex: 1;
 }
 
 .copy-btn {
@@ -312,6 +320,7 @@ input:-webkit-autofill:active {
   padding: 3px 8px;
   transition: all 0.2s;
   line-height: 1;
+  flex-shrink: 0;
 }
 
 .copy-btn:hover { background: rgba(255,255,255,0.12); }
@@ -492,7 +501,7 @@ input:-webkit-autofill:active {
 }
 
 /* ============================================
-   TRANSITION PAGE (freeze fix)
+   TRANSITION PAGE
 ============================================ */
 .page-transition {
   position: fixed;
@@ -560,7 +569,6 @@ input:-webkit-autofill:active {
 }
 
 .recap-row:last-child { border-bottom: none; }
-
 .recap-emoji { font-size: 22px; }
 
 .recap-name {
@@ -688,6 +696,3 @@ input:-webkit-autofill:active {
 }
 
 .result-btn:hover { transform: scale(1.05); }
-
-
-
