@@ -1,3 +1,40 @@
+const socket = io();
+
+const name = localStorage.getItem("name");
+const code = localStorage.getItem("roomCode");
+const roomName = localStorage.getItem("roomName");
+let currentEmoji = localStorage.getItem("emoji") || "👽";
+
+document.getElementById("lobbyName").innerText = roomName;
+document.getElementById("roomCode").innerText = code;
+document.getElementById("lobbyEmoji").innerText = currentEmoji;
+
+if (code && !window.location.pathname.includes(code)) {
+  window.history.replaceState(null, "", "/" + code);
+}
+
+socket.on("connect", () => {
+  socket.emit("joinRoom", { playerName: name, code, emoji: currentEmoji });
+});
+
+document.getElementById("copyBtn").onclick = () => {
+  const url = window.location.origin + "/" + code;
+  navigator.clipboard.writeText(url);
+  showLobbyNotif("🔗 Lien copié !", "#4dff91");
+};
+
+const emojis = ["👽","🤖","🧙‍♂️","👩‍🚀","💩","👸","👺"];
+let emojiIndex = emojis.indexOf(currentEmoji);
+if (emojiIndex === -1) emojiIndex = 0;
+
+document.getElementById("prevEmoji").onclick = () => {
+  emojiIndex = (emojiIndex - 1 + emojis.length) % emojis.length;
+  currentEmoji = emojis[emojiIndex];
+  document.getElementById("lobbyEmoji").innerText = currentEmoji;
+  localStorage.setItem("emoji", currentEmoji);
+  socket.emit("updateEmoji", { code, emoji: currentEmoji });
+};
+
 document.getElementById("nextEmoji").onclick = () => {
   emojiIndex = (emojiIndex + 1) % emojis.length;
   currentEmoji = emojis[emojiIndex];
@@ -19,7 +56,6 @@ const btnStyle = `
   border:1px solid rgba(255,255,255,0.1);transition:all 0.3s;
 `;
 
-// 🔥 ⚙️ en haut, 📜 en dessous avec un peu plus d'espace
 settingsBtn.style.cssText = btnStyle + "top:16px;right:16px;";
 rulesBtn.style.cssText = btnStyle + "top:58px;right:16px;";
 
