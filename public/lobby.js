@@ -246,7 +246,7 @@ socket.on("startCountdown", (data) => {
   localStorage.setItem("round", data.round || 1);
   const t = document.getElementById("pageTransition");
   if (t) t.classList.add("active");
-  setTimeout(() => { window.location.href = "/game"; }, 300);
+  setTimeout(() => { window.location.href = "game.html"; }, 300);
 });
 
 socket.on("backToLobby", () => {
