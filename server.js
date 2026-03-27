@@ -640,6 +640,12 @@ function startTurn(roomCode) {
   const room = rooms[roomCode];
   if (!room) return;
 
+  // 🔥 Toujours clear le timer précédent avant tout
+  if (room.turnTimer) {
+    clearTimeout(room.turnTimer);
+    room.turnTimer = null;
+  }
+
   const activePlayers = room.players.filter(p => !p.disconnected);
   if (activePlayers.length === 0) return;
 
@@ -654,7 +660,6 @@ function startTurn(roomCode) {
     return;
   }
 
-  // 🔥 Fix rotation fiable
   const turnsPlayed = room.currentWordIndex * activePlayers.length + room.currentPlayerIndex;
   const playerIndex = (room.roundStartPlayerIndex + turnsPlayed) % activePlayers.length;
   const player = activePlayers[playerIndex];
@@ -668,6 +673,7 @@ function startTurn(roomCode) {
   });
 
   room.turnTimer = setTimeout(() => {
+    room.turnTimer = null;
     player.score -= 1;
 
     if (!room.words[room.currentWordIndex]) room.words[room.currentWordIndex] = {};
@@ -684,7 +690,7 @@ function startTurn(roomCode) {
       score: player.score,
     });
 
-    setTimeout(() => advanceTurn(roomCode), 1500);
+    setTimeout(() => advanceTurn(roomCode), 1000000);
 
   }, room.settings.timer * 1000);
 }
