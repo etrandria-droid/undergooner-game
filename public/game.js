@@ -578,16 +578,16 @@ socket.on("voteResult", ({ wasUndercover, wasMrWhite, civilWord, undercoverWord,
       const votedFor = voteMap ? voteMap[p.name] : null;
 
       html += `
-        <div class="score-card">
-          <div class="score-card-emoji">${p.emoji}</div>
-          <div class="score-card-name">${p.name} ${roleEmoji}</div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.35);margin:2px 0;">${votedFor ? "→ " + votedFor : "— n'a pas voté"}</div>
-          <div class="score-card-pts">${p.score} pts</div>
-          <div style="font-size:12px;font-weight:800;color:${gained > 0 ? "#4dff91" : gained < 0 ? "#ff4b5c" : "rgba(255,255,255,0.3)"};">
-            ${gained > 0 ? "+" + gained + " pt" : gained < 0 ? gained + " pt" : "="}
-          </div>
-        </div>
-      `;
+  <div class="score-card">
+    <div class="score-card-emoji">${p.emoji}</div>
+    <div class="score-card-name">${p.name} ${roleEmoji}</div>
+    <div style="font-size:10px;color:rgba(255,255,255,0.35);margin:2px 0;">${votedFor ? "→ " + votedFor : "— n'a pas voté"}</div>
+    <div class="score-card-pts">${p.score} pts</div>
+    <div style="font-size:12px;font-weight:800;color:${gained > 0 ? "#4dff91" : gained < 0 ? "#ff4b5c" : "rgba(255,255,255,0.3)"};">
+      ${gained > 0 ? "+" + gained + " pt" : gained < 0 ? gained + " pt" : "="}
+    </div>
+  </div>
+`;
     });
     html += `</div>`;
 
