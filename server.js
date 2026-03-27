@@ -9,7 +9,6 @@ const io = new Server(server);
 
 app.use(express.static("public"));
 
-// 🔥 URLs propres — /[code] redirige vers lobby
 app.get("/:code", (req, res) => {
   if (!/^[A-Z0-9]{5}$/.test(req.params.code)) return res.status(404).send("Not found");
   res.sendFile(path.join(__dirname, "public", "lobby.html"));
@@ -328,7 +327,6 @@ io.on("connection", (socket) => {
       player.disconnected = false;
       socket.join(code);
 
-      // 🔥 Renvoyer l'état actuel du jeu au joueur qui rejoint
       socket.emit("startCountdown", {
         word: player.word,
         role: player.role,
@@ -343,7 +341,6 @@ io.on("connection", (socket) => {
         }))
       });
 
-      // 🔥 Renvoyer les mots déjà joués
       socket.emit("restoreGameState", {
         words: room.words,
         currentWordIndex: room.currentWordIndex,
@@ -406,6 +403,10 @@ io.on("connection", (socket) => {
 
     room.currentRound++;
 
+    // 🔥 Rotation du joueur de départ
+    const activePlayers = room.players.filter(p => !p.disconnected);
+    room.roundStartPlayerIndex = (room.roundStartPlayerIndex + 1) % activePlayers.length;
+
     if (room.currentRound > room.totalRounds) {
       io.to(roomCode).emit("gameOver", {
         scores: room.players.map(p => ({ name: p.name, emoji: p.emoji, score: p.score }))
@@ -463,34 +464,30 @@ io.on("connection", (socket) => {
     advanceTurn(roomCode);
   });
 
-socket.on("vote", ({ target }) => {
-  const roomCode = Object.keys(rooms).find(code =>
-    rooms[code].players.find(p => p.id === socket.id)
-  );
-  if (!roomCode) return;
-  const room = rooms[roomCode];
-  if (!room.votes) room.votes = {};
+  socket.on("vote", ({ target }) => {
+    const roomCode = Object.keys(rooms).find(code =>
+      rooms[code].players.find(p => p.id === socket.id)
+    );
+    if (!roomCode) return;
+    const room = rooms[roomCode];
+    if (!room.votes) room.votes = {};
 
-  room.votes[socket.id] = target;
+    room.votes[socket.id] = target;
 
-  const voter = room.players.find(p => p.id === socket.id);
-  if (voter) {
-    io.to(roomCode).emit("playerVoted", { playerName: voter.name });
-  }
+    const voter = room.players.find(p => p.id === socket.id);
+    if (voter) {
+      io.to(roomCode).emit("playerVoted", { playerName: voter.name });
+    }
 
-  // 🔥 Fix : ne compter que les joueurs connectés ET présents dans la room
-  const activePlayers = room.players.filter(p => !p.disconnected);
-  const totalVotes = Object.keys(room.votes).length;
-  
-  // 🔥 Fix : vérifier aussi que tous les voters actifs ont voté
-  const activeVoters = activePlayers.filter(p => 
-    Object.keys(room.votes).includes(p.id)
-  );
-  
-  if (activeVoters.length < activePlayers.length) return;
+    const activePlayers = room.players.filter(p => !p.disconnected);
+    const activeVoters = activePlayers.filter(p =>
+      Object.keys(room.votes).includes(p.id)
+    );
 
-  resolveVote(roomCode);
-});
+    if (activeVoters.length < activePlayers.length) return;
+
+    resolveVote(roomCode);
+  });
 
   socket.on("mrWhiteGuess", ({ guess, code }) => {
     const room = rooms[code];
@@ -573,6 +570,7 @@ function startRound(roomCode) {
 
   room.started = true;
   room.currentWordIndex = 0;
+  room.currentPlayerIndex = 0;
   room.votes = {};
   room.votesSnapshot = {};
   room.pendingReveal = null;
@@ -581,8 +579,7 @@ function startRound(roomCode) {
   room.wordsPerRound = room.settings.wordsPerRound || 3;
 
   const activePlayers = room.players.filter(p => !p.disconnected);
-  room.roundStartPlayerIndex = room.roundStartPlayerIndex % activePlayers.length;
-  room.currentPlayerIndex = 0; // 🔥 Fix : on repart de 0 à chaque round
+  room.roundStartPlayerIndex = (room.roundStartPlayerIndex || 0) % activePlayers.length;
 
   room.players.forEach(p => {
     p.eliminated = false;
@@ -657,8 +654,9 @@ function startTurn(roomCode) {
     return;
   }
 
-  // 🔥 Fix rotation simple et fiable
-  const playerIndex = (room.roundStartPlayerIndex + room.currentPlayerIndex) % activePlayers.length;
+  // 🔥 Fix rotation fiable
+  const turnsPlayed = room.currentWordIndex * activePlayers.length + room.currentPlayerIndex;
+  const playerIndex = (room.roundStartPlayerIndex + turnsPlayed) % activePlayers.length;
   const player = activePlayers[playerIndex];
   if (!player) return;
 
@@ -701,8 +699,9 @@ function advanceTurn(roomCode) {
 
   room.currentPlayerIndex++;
 
-  // 🔥 Fix : quand tout le monde a joué → mot suivant
-  if (room.currentPlayerIndex % activePlayers.length === 0) {
+  // 🔥 Fix : mot suivant quand tous les joueurs ont joué
+  if (room.currentPlayerIndex >= activePlayers.length) {
+    room.currentPlayerIndex = 0;
     room.currentWordIndex++;
   }
 
@@ -713,7 +712,6 @@ function advanceTurn(roomCode) {
 function resolveVote(roomCode) {
   const room = rooms[roomCode];
 
-  // 🔥 Sauvegarder les scores AVANT attribution pour le récap
   const prevScores = {};
   room.players.forEach(p => { prevScores[p.name] = p.score; });
 
@@ -780,7 +778,9 @@ function resolveVote(roomCode) {
       });
       room.pendingReveal.mrWhiteGuessCorrect = false;
       room.pendingReveal.mrWhiteGuess = null;
-      room.pendingReveal.scores = room.players.map(p => ({ name: p.name, emoji: p.emoji, score: p.score }));
+      room.pendingReveal.scores = room.players.map(p => ({
+        name: p.name, emoji: p.emoji, score: p.score
+      }));
       revealResult(roomCode);
     }, 31000);
 
